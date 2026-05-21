@@ -216,3 +216,37 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ===== Additions for this project =====
+
+# macOS
+.DS_Store
+
+# Data files
+data/
+*.h5ad
+*.h5
+*.rds
+*.loom
+*.zarr/
+*.mtx
+*.mtx.gz
+
+# Caches
+*.npz
+*.npy
+*.pkl
+*.pickle
+*.parquet
+*.feather
+
+# Sequencing / imaging
+*.bam
+*.fastq
+*.fastq.gz
+*.tif
+*.tiff
+
+# Project scratch
+scratch/
+tmp/
