@@ -104,7 +104,7 @@ dependencies:
       - networkx==3.6.1
       - numba==0.65.1
       - numcodecs==0.16.5
-      - numpy==2.4.6
+      - numpy<2
       - ome-zarr==0.15.0
       - omnipath==1.0.12
       - opt-einsum==3.4.0

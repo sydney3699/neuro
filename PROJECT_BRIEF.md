@@ -39,9 +39,17 @@ The 2x2 comparison structure is detailed in the analytical pipeline section belo
 
 ## Data
 
-### Primary dataset
+### Primary datasets
 - **MERFISH master integrated atlas:** `merscope_integrated_855.h5ad` (14.2 GB, 15.9M cells). Qian/Walsh et al. 2025, *Nature*. Zenodo: [10.5281/zenodo.14422018](https://doi.org/10.5281/zenodo.14422018) (CC-BY 4.0).
 - Used for GW20 analyses; subset to V1/V2 areas (A-V1, B-V1, A-V2, B-V2) and cortical plate + marginal zone layers.
+- **Paired snRNA-seq:** 91,898 cells from the same samples as MERFISH. Used for 
+  ENVI imputation of whole-transcriptome expression. Required for L-R-based 
+  CCC analysis. Location: investigate Final_Integration_MDM_100323.rds or 
+  contact authors.
+
+- **ENVI-imputed expression:** Whole-transcriptome (or top 1,000 HVGs) imputed 
+  from snRNA-seq onto MERFISH cells. May be available as paper artifact, 
+  otherwise generated as part of project pipeline.
 
 ### Secondary dataset
 - **Per-region BA17 file:** `gw34_umb5900_ba17.h5ad` (309 MB, 240K cells; 38.5K with area assignments).
@@ -75,8 +83,10 @@ The 2x2 comparison structure is detailed in the analytical pipeline section belo
 - *Standard:* Banksy spatial clustering
 - *GNN-enhanced:* STAGATE (default) or GraphST (fallback)
 
-**Stage 4 — Spatial cell-cell communication (constant across pipelines):**
-- COMMOT with the CellChatDB ligand-receptor database, restricted to genes in the MERFISH panel (~300 genes)
+**Stage 4 — Spatial cell-cell communication:**
+- COMMOT with the CellChatDB ligand-receptor database
+- Run on ENVI-imputed expression (not raw 300-gene MERFISH) to access 
+  full L-R pair coverage
 - Comparison run: CellChat (non-spatial) on the same cells for context
 
 ### The 2x2 pipeline matrix

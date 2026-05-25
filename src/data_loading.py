@@ -74,3 +74,45 @@ def load_main_merfish(project_root=None, harmonized=True, backed='r'):
         adata.obs['harmonized'] = harmonized_df['harmonized'].values
 
     return adata
+
+
+def load_snrna(project_root=None, sample_filter=None, celltype_filter=None, backed='r'):
+    """
+    Load the paired snRNA-seq AnnData (~66K FB080 cells with whole-transcriptome expression).
+    
+    Parameters
+    ----------
+    project_root : Path or None
+        Project root path. Auto-detected if None.
+    sample_filter : list of str or None
+        Optional list of sample IDs (e.g., ['FB080_I', 'FB080_J']) to filter to.
+    celltype_filter : list of str or None
+        Optional list of cell types to filter to.
+    backed : str or None
+        Backed mode for the AnnData. Use None to load fully in memory.
+    
+    Returns
+    -------
+    AnnData
+    """
+    if project_root is None:
+        project_root = get_project_root()
+    
+    snrna_path = project_root / 'data' / 'raw' / 'snrna.h5ad'
+    if not snrna_path.exists():
+        raise FileNotFoundError(
+            f"snRNA-seq file not found at {snrna_path}. "
+            "Run reconstruction in 01_data_inspection.ipynb."
+        )
+    
+    adata = ad.read_h5ad(snrna_path, backed=backed)
+    
+    if sample_filter:
+        mask = adata.obs['orig.ident'].isin(sample_filter)
+        adata = adata[mask].copy()
+    
+    if celltype_filter:
+        mask = adata.obs['celltypes'].isin(celltype_filter)
+        adata = adata[mask].copy()
+    
+    return adata
