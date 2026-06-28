@@ -21,13 +21,15 @@ nvidia-smi || true
 TRAINING_STEPS="${TRAINING_STEPS:-10000}"
 NUM_HVG="${NUM_HVG:-2048}"
 OUTDIR="${OUTDIR:-/scratch/cole.sy/neuro/results/envi_FB080}"
-echo "TRAINING_STEPS=$TRAINING_STEPS  NUM_HVG=$NUM_HVG  OUTDIR=$OUTDIR"
+CELLTYPE_KEY="${CELLTYPE_KEY:-H2_annotation}"
+echo "TRAINING_STEPS=$TRAINING_STEPS  NUM_HVG=$NUM_HVG  OUTDIR=$OUTDIR  CELLTYPE_KEY=$CELLTYPE_KEY"
 
 conda run --no-capture-output -n neuro python -u /home/cole.sy/neuro/scripts/run_envi.py \
     --spatial /scratch/cole.sy/neuro/data/processed/FB080_O1b_v1v2_envi_input.h5ad \
     --snrna   /scratch/cole.sy/neuro/data/raw/snrna.h5ad \
     --outdir  "$OUTDIR" \
     --training-steps "$TRAINING_STEPS" \
-    --num-hvg "$NUM_HVG"
+    --num-hvg "$NUM_HVG" \
+    --celltype-key "$CELLTYPE_KEY"
 
 echo "End: $(date)"

@@ -122,13 +122,23 @@ def main():
     log("Imputing transcriptome onto spatial cells (impute_genes) ...")
     model.impute_genes()
 
+    niche_ran = False
     if args.celltype_key:
         if args.celltype_key not in model.spatial_data.obs.columns:
             raise SystemExit(f"--celltype-key '{args.celltype_key}' not in spatial obs "
                              f"({list(model.spatial_data.obs.columns)})")
-        log(f"Inferring niche cell-type composition (key={args.celltype_key}) ...")
-        model.infer_niche_covet()
-        model.infer_niche_celltype(cell_type_key=args.celltype_key)
+        # Wrapped so a niche failure can't discard the imputation outputs below.
+        try:
+            log(f"Inferring niche cell-type composition (key={args.celltype_key}) ...")
+            model.infer_niche_covet()
+            # scenvi's niche_cell_type() hardcodes obs['cell_type'] in one line, so
+            # mirror the chosen annotation column there before calling.
+            model.spatial_data.obs["cell_type"] = model.spatial_data.obs[args.celltype_key].values
+            model.infer_niche_celltype(cell_type_key="cell_type")
+            niche_ran = True
+            log("  niche inference done")
+        except Exception as e:
+            log(f"  niche inference FAILED ({e.__class__.__name__}: {e}) — continuing to save imputation")
 
     # --- Save outputs (each guarded independently so one failure can't lose the rest) ---
     outdir = Path(args.outdir)
@@ -160,6 +170,12 @@ def main():
     save("sc latent", lambda: np.save(outdir / "sc_envi_latent.npy",
                                       np.asarray(model.sc_data.obsm["envi_latent"])))
     save("spatial obs", lambda: model.spatial_data.obs.to_csv(outdir / "spatial_obs.csv"))
+
+    if niche_ran:
+        save("spatial cell_type_niche",
+             lambda: model.spatial_data.obsm["cell_type_niche"].to_csv(outdir / "spatial_cell_type_niche.csv"))
+        save("sc cell_type_niche",
+             lambda: model.sc_data.obsm["cell_type_niche"].to_csv(outdir / "sc_cell_type_niche.csv"))
 
     # Slim spatial AnnData carrying obsm['imputation'] + envi_latent; drop bulky 3D COVET arrays.
     def _h5ad():
