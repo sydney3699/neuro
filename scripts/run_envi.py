@@ -177,12 +177,25 @@ def main():
         save("sc cell_type_niche",
              lambda: model.sc_data.obsm["cell_type_niche"].to_csv(outdir / "sc_cell_type_niche.csv"))
 
-    # Slim spatial AnnData carrying obsm['imputation'] + envi_latent; drop bulky 3D COVET arrays.
+    # Slim spatial AnnData carrying imputation + envi_latent (+ niche if it ran).
+    # Build it fresh with obsm as plain ndarrays rather than copying scenvi's
+    # spatial_data: its obsm DataFrames carry H2 labels like "EN-IT-L2/3", and the
+    # forward slashes are parsed as HDF5 group paths on write, colliding into
+    # `TypeError: Incompatible object (Dataset) already exists`. Column labels are
+    # preserved in uns so the arrays stay self-describing.
     def _h5ad():
-        sp_out = model.spatial_data.copy()
-        for k in ["COVET", "COVET_SQRT"]:
-            sp_out.obsm.pop(k, None)
-        sp_out.write_h5ad(outdir / "FB080_spatial_envi.h5ad")
+        import anndata as ad
+        sp = model.spatial_data
+        out = ad.AnnData(X=sp.X, obs=sp.obs.copy(), var=sp.var.copy())
+        out.obsm["spatial"] = np.asarray(sp.obsm[args.spatial_key])
+        out.obsm["envi_latent"] = np.asarray(sp.obsm["envi_latent"])
+        out.obsm["imputation"] = imp.to_numpy(dtype=np.float32)
+        out.uns["imputation_genes"] = list(map(str, imp.columns))
+        if niche_ran:
+            niche = sp.obsm["cell_type_niche"]
+            out.obsm["cell_type_niche"] = niche.to_numpy(dtype=np.float32)
+            out.uns["cell_type_niche_cols"] = list(map(str, niche.columns))
+        out.write_h5ad(outdir / "FB080_spatial_envi.h5ad")
     save("spatial h5ad", _h5ad)
 
     log(f"DONE. Outputs in {outdir}")
