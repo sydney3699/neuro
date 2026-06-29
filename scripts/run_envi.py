@@ -36,6 +36,11 @@ def main():
     p.add_argument("--celltype-key", default=None,
                    help="spatial obs column for niche cell-type inference (e.g. H3_annotation). "
                         "If set, runs infer_niche_covet + infer_niche_celltype.")
+    p.add_argument("--lr-database", default="none", choices=["none", "cellchat"],
+                   help="If 'cellchat', force-include all CellChatDB L-R genes present in the snRNA "
+                        "reference into the imputed gene set (HVGs u L-R u panel overlap). HVG-only "
+                        "sets leave ~98%% of L-R pairs uncovered, starving COMMOT.")
+    p.add_argument("--lr-species", default="human")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--allow-cpu", action="store_true",
                    help="Proceed even if no GPU is visible to JAX (training will be very slow).")
@@ -88,6 +93,37 @@ def main():
     overlap = set(spatial.var_names) & sc_genes
     log(f"  spatial∩snRNA overlap: {len(overlap)}/{spatial.n_vars}")
 
+    # --- Optionally force-include ligand-receptor genes so the imputation covers
+    #     the CCC interactome. An HVG-only set (num_HVG) leaves most CellChatDB
+    #     pairs with an unimputed gene (~2% pair coverage at num_HVG=2048); we
+    #     instead impute onto HVGs u (L-R genes in snRNA) u panel overlap. ---
+    eff_num_hvg = args.num_hvg
+    if args.lr_database == "cellchat":
+        import commot as ct
+        import scanpy as sca
+        db = ct.pp.ligand_receptor_database(species=args.lr_species, signaling_type=None)
+        lr_genes = set()
+        for _, r in db.iterrows():
+            for col in (r.iloc[0], r.iloc[1]):
+                lr_genes.update(str(col).replace("_", "^").split("^"))
+        lr_present = lr_genes & sc_genes
+        log(f"  CellChatDB: {len(db)} pairs, {len(lr_genes)} unique L-R genes, "
+            f"{len(lr_present)} present in snRNA")
+        # Rank HVGs on a normalized copy (default flavor avoids the seurat_v3/skmisc dep);
+        # union with L-R + overlap, then keep them all by setting num_HVG to the set size.
+        hv = sc.copy()
+        sca.pp.normalize_total(hv, target_sum=1e4)
+        sca.pp.log1p(hv)
+        sca.pp.highly_variable_genes(hv, n_top_genes=args.num_hvg)
+        hvg = set(hv.var_names[hv.var["highly_variable"]].astype(str))
+        del hv
+        target = sorted((hvg | lr_present | overlap) & sc_genes)
+        sc = sc[:, target].copy()
+        sc_genes = set(sc.var_names)
+        eff_num_hvg = sc.n_vars  # keep every gene in the forced set
+        log(f"  forced gene set: {len(target)} genes "
+            f"(hvg={len(hvg)}, lr_added={len(lr_present - hvg)}, overlap={len(overlap)})")
+
     # --- Sanity: scenvi expects raw counts for pois/nb distributions ---
     for name, a in [("spatial", spatial), ("snRNA", sc)]:
         x = a.X[:200]
@@ -107,7 +143,7 @@ def main():
     log("Initializing ENVI (computes COVET niche matrices) ...")
     t0 = time.time()
     model = ENVI(spatial_data=spatial, sc_data=sc,
-                 spatial_key=args.spatial_key, num_HVG=args.num_hvg)
+                 spatial_key=args.spatial_key, num_HVG=eff_num_hvg)
     log(f"  ENVI init done in {time.time()-t0:.1f}s; overlap_num={model.overlap_num}, "
         f"sc genes kept={model.sc_data.n_vars}")
 
