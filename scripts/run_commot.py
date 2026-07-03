@@ -49,6 +49,10 @@ def main():
     p.add_argument("--pair-chunk", default="",
                    help="'i/N': run only pair-chunk i of N (round-robin) on ALL cells, saving a slim "
                         "per-pair sender/receiver parquet for later merge. Enables pair-parallel runs.")
+    p.add_argument("--pair-batch", type=int, default=4,
+                   help="in chunked mode, process pairs this many at a time, freeing COMMOT's "
+                        "per-pair transport matrices between sub-batches to cap peak memory "
+                        "(~33 GB base + ~3 GB/pair at 52k cells). 0/negative = all pairs at once.")
     p.add_argument("--seed", type=int, default=0)
     args = p.parse_args()
 
@@ -110,32 +114,54 @@ def main():
     # slow pairs spread evenly). pathway_sum is deferred to the merge, which has all pairs.
     chunked = bool(args.pair_chunk)
     if chunked:
+        import gc
         ci, cn = (int(x) for x in args.pair_chunk.split("/"))
         db_f = db_f.iloc[ci::cn].copy()
         log(f"  pair-chunk {ci}/{cn}: {len(db_f)} pairs on all {adata.n_obs} cells")
 
-    # --- Spatial communication ---
+        # COMMOT keeps a cell x cell transport matrix in obsp for EVERY pair at
+        # once (~3 GB/pair at 52k cells), so a whole chunk in one call OOMs. Run
+        # pairs in sub-batches, extract the slim sender/receiver sums, drop the
+        # obsp/obsm/uns commot artifacts, repeat. Peak mem ~ base + pair_batch*3 GB.
+        pb = args.pair_batch if args.pair_batch and args.pair_batch > 0 else len(db_f)
+        nb = -(-len(db_f) // pb)
+        send_parts, recv_parts = [], []
+        t0 = time.time()
+        for b, start in enumerate(range(0, len(db_f), pb), 1):
+            sub = db_f.iloc[start:start + pb]
+            ct.tl.spatial_communication(adata, database_name="cellchat", df_ligrec=sub,
+                                        dis_thr=args.dis_thr, heteromeric=True,
+                                        pathway_sum=False, cot_nitermax=args.cot_nitermax)
+            for parts, key in [(send_parts, "commot-cellchat-sum-sender"),
+                               (recv_parts, "commot-cellchat-sum-receiver")]:
+                df = adata.obsm[key]
+                cols = [c for c in df.columns if str(c) not in ("s-total-total", "r-total-total")]
+                parts.append(df[cols].copy())
+            # free COMMOT's big transport matrices + sum artifacts before the next sub-batch
+            for store in (adata.obsp, adata.obsm, adata.uns):
+                for k in [k for k in list(store) if str(k).startswith("commot")]:
+                    del store[k]
+            gc.collect()
+            log(f"  sub-batch {b}/{nb}: {len(sub)} pairs done ({time.time()-t0:.0f}s elapsed)")
+
+        # Slim output: per-pair sender/receiver columns only (merge reassembles
+        # totals + pathway sums across all chunks).
+        sender = pd.concat(send_parts, axis=1); sender.index = adata.obs_names
+        receiver = pd.concat(recv_parts, axis=1); receiver.index = adata.obs_names
+        sender.to_parquet(outdir / f"chunk_{args.region}_{ci}of{cn}_sender.parquet")
+        receiver.to_parquet(outdir / f"chunk_{args.region}_{ci}of{cn}_receiver.parquet")
+        log(f"  done in {time.time()-t0:.1f}s ({nb} sub-batches of <= {pb} pairs)")
+        log(f"DONE (chunk {ci}/{cn}). wrote slim sender/receiver parquets to {outdir}")
+        return
+
+    # --- Non-chunked full run: single spatial_communication over all pairs ---
     log(f"Running spatial_communication (dis_thr={args.dis_thr} um, nitermax={args.cot_nitermax}) ...")
     t0 = time.time()
     ct.tl.spatial_communication(adata, database_name="cellchat", df_ligrec=db_f,
-                                dis_thr=args.dis_thr, heteromeric=True, pathway_sum=not chunked,
+                                dis_thr=args.dis_thr, heteromeric=True, pathway_sum=True,
                                 cot_nitermax=args.cot_nitermax)
     log(f"  done in {time.time()-t0:.1f}s; new obsm keys: "
         f"{[k for k in adata.obsm if k.startswith('commot')]}")
-
-    if chunked:
-        # Slim output: only the per-pair sender/receiver columns (drop 's-total-total'
-        # and the huge cell-by-cell obsp transport matrices). Merge step reassembles.
-        ci, cn = (int(x) for x in args.pair_chunk.split("/"))
-        for side, key in [("sender", "commot-cellchat-sum-sender"),
-                          ("receiver", "commot-cellchat-sum-receiver")]:
-            df = adata.obsm[key]
-            pair_cols = [c for c in df.columns if str(c) not in ("s-total-total", "r-total-total")]
-            df = df[pair_cols].copy()
-            df.index = adata.obs_names
-            df.to_parquet(outdir / f"chunk_{args.region}_{ci}of{cn}_{side}.parquet")
-        log(f"DONE (chunk {ci}/{cn}). wrote slim sender/receiver parquets to {outdir}")
-        return
 
     # --- Full save: guard h5ad write against '/' in obsm DataFrame columns (h5py
     #     reads '/' as a group path; bit us on the niche tables). ---
