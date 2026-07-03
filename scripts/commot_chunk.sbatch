@@ -3,8 +3,8 @@
 #SBATCH --partition=short
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=128G
-#SBATCH --time=06:00:00
-#SBATCH --array=0-31
+#SBATCH --time=2-00:00:00
+#SBATCH --array=0-23
 #SBATCH --output=/scratch/cole.sy/neuro/logs/cmchunk_%A_%a.out
 #SBATCH --error=/scratch/cole.sy/neuro/logs/cmchunk_%A_%a.err
 
@@ -18,8 +18,12 @@
 #
 # IMPORTANT: keep --array and NCHUNK in sync. --array is a static directive, so
 # to change the chunk count edit BOTH the "#SBATCH --array=0-<N-1>" line above
-# and NCHUNK below. Size N from the probe: N = total_pairs * sec_per_pair / 9000
-# (targets ~2.5h/chunk; the 6h wall gives generous headroom).
+# and NCHUNK below.
+#
+# Sizing (measured, all 52k cells, nitermax=500): per-pair cost is heterogeneous,
+# ~1080-1470s/pair (probe 8071285/8071286). At N=24 -> ~67 pairs/chunk; worst
+# case ~67*1470s ~= 27h, comfortably under the 2-day wall. Round-robin spreads
+# the expensive pairs so no single chunk is overloaded.
 #
 # COMMOT is CPU-only, so this uses 'short' (2-day limit), no GPU.
 #
@@ -30,8 +34,8 @@ set -euo pipefail
 mkdir -p /scratch/cole.sy/neuro/logs /scratch/cole.sy/neuro/results/commot
 
 REGION="${REGION:-v1}"
-NCHUNK="${NCHUNK:-32}"            # MUST match the --array range above (0..N-1)
-COT_NITERMAX="${COT_NITERMAX:-10000}"
+NCHUNK="${NCHUNK:-24}"            # MUST match the --array range above (0..N-1)
+COT_NITERMAX="${COT_NITERMAX:-500}"   # nitermax verified irrelevant at 52k scale; 500 is no slower
 
 echo "Host: $(hostname)  Region: ${REGION}  Chunk: ${SLURM_ARRAY_TASK_ID}/${NCHUNK}  nitermax: ${COT_NITERMAX}  Start: $(date)"
 
