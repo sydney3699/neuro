@@ -58,8 +58,11 @@ def main():
     p = argparse.ArgumentParser(description="Per-niche composition/signaling/boundary profiling")
     p.add_argument("--h5ad", required=True, help="commot_<region>.h5ad (per-cell signaling substrate)")
     p.add_argument("--region", default="", help="tag for output filenames; default inferred from --area-key")
-    p.add_argument("--domain-key", default="layer", help="obs column of domain/niche labels (stand-in: layer)")
-    p.add_argument("--celltype-key", default="H2_annotation", help="obs column of cell-type labels")
+    p.add_argument("--domain-key", default="layer", help="column of domain/niche labels (in obs, or in --domain-parquet)")
+    p.add_argument("--celltype-key", default="H2_annotation", help="obs column of cell-type labels (if no --annotation-parquet)")
+    p.add_argument("--domain-parquet", default="", help="external per-cell domain table (e.g. banksy); --domain-key selects the column; attached to the commot cells by cell id.")
+    p.add_argument("--annotation-parquet", default="", help="external per-cell annotation table (e.g. scvi); attached by cell id.")
+    p.add_argument("--annotation-col", default="annotation", help="column in --annotation-parquet holding the cell-type label")
     p.add_argument("--layer-key", default="layer", help="obs column of cortical layer (spatial context)")
     p.add_argument("--area-key", default="area", help="obs column used to infer --region if unset")
     p.add_argument("--depth-keys", default="cortical_depth,relative_height",
@@ -89,17 +92,34 @@ def main():
     region = args.region or (str(obs[args.area_key].iloc[0]) if args.area_key in obs else "region")
     log(f"  {a.n_obs} cells; region tag = {region}")
 
-    for key in (args.domain_key, args.celltype_key, args.layer_key):
-        if key not in obs.columns:
-            raise SystemExit(f"obs column '{key}' not found; have {list(obs.columns)}")
+    if args.layer_key not in obs.columns:
+        raise SystemExit(f"obs column '{args.layer_key}' not found; have {list(obs.columns)}")
 
-    domain = obs[args.domain_key].astype(str)
-    celltype = obs[args.celltype_key].astype(str)
+    def attach(parquet, col, what):
+        """Pull a per-cell label column from an external parquet, aligned to the
+        commot cells by cell id (index). Errors if any cell is unlabeled."""
+        df = pd.read_parquet(parquet)
+        if col not in df.columns:
+            raise SystemExit(f"'{col}' not in {parquet}; have {list(df.columns)}")
+        s = df[col].reindex(obs.index)
+        if s.isna().any():
+            raise SystemExit(f"{s.isna().sum()} of {len(s)} commot cells missing from {what} parquet")
+        return s.astype(str)
+
+    if args.domain_parquet:
+        domain = attach(args.domain_parquet, args.domain_key, "domain")
+        log(f"  domains from {Path(args.domain_parquet).name}['{args.domain_key}']")
+    else:
+        domain = obs[args.domain_key].astype(str)
+    if args.annotation_parquet:
+        celltype = attach(args.annotation_parquet, args.annotation_col, "annotation")
+        log(f"  cell types from {Path(args.annotation_parquet).name}['{args.annotation_col}']")
+    else:
+        celltype = obs[args.celltype_key].astype(str)
     layer = obs[args.layer_key].astype(str)
     xy = np.asarray(a.obsm["spatial"], dtype=float)
     domains = sorted(domain.unique())
-    log(f"  {len(domains)} domains from '{args.domain_key}'; "
-        f"{celltype.nunique()} cell types from '{args.celltype_key}'")
+    log(f"  {len(domains)} domains ('{args.domain_key}'); {celltype.nunique()} cell types")
 
     # --- signaling matrix (sender + receiver, chosen level) ---
     db = ct.pp.ligand_receptor_database(species=args.species, signaling_type=None, database="CellChat")
