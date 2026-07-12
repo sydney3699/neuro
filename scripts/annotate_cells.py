@@ -33,7 +33,7 @@ def log(msg):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
 
 
-def compute_embedding(adata, backend, n_latent, scvi_epochs, log):
+def compute_embedding(adata, backend, n_latent, scvi_epochs, seed, log):
     """Return an (n_cells, d) latent array in adata.obsm['X_emb']-ready form."""
     import scanpy as sc
     if backend == "pca":
@@ -46,6 +46,7 @@ def compute_embedding(adata, backend, n_latent, scvi_epochs, log):
     if backend == "scvi":
         import numpy as np
         import scvi
+        scvi.settings.seed = seed          # reproducible latent (scVI training is stochastic)
         a = adata.copy()
         # ENVI imputation is continuous; scVI needs counts -> integer pseudo-counts.
         a.layers["counts"] = np.rint(np.asarray(a.X)).clip(min=0).astype("float32")
@@ -68,6 +69,13 @@ def main():
     p.add_argument("--n-latent", type=int, default=30)
     p.add_argument("--scvi-epochs", type=int, default=200)
     p.add_argument("--n-neighbors", type=int, default=15)
+    p.add_argument("--seed", type=int, default=0, help="reproducibility seed (scvi/leiden/kmeans)")
+    p.add_argument("--min-corr", type=float, default=0.5,
+                   help="flag a cluster low_confidence if its best reference correlation is below this")
+    p.add_argument("--min-margin", type=float, default=0.05,
+                   help="flag a cluster low_confidence if best-minus-second-best correlation is below this")
+    p.add_argument("--unassign", action="store_true",
+                   help="set low_confidence clusters to 'unassigned' rather than only flagging them")
     p.add_argument("--tag", default="FB080", help="output filename tag")
     p.add_argument("--outdir", required=True)
     args = p.parse_args()
@@ -101,13 +109,14 @@ def main():
         log(f"  using precomputed embedding obsm['{args.embedding_obsm}'] {emb.shape}")
     else:
         log(f"  computing {args.embedding} embedding (n_latent={args.n_latent})")
-        emb = compute_embedding(adata, args.embedding, args.n_latent, args.scvi_epochs, log)
+        emb = compute_embedding(adata, args.embedding, args.n_latent, args.scvi_epochs, args.seed, log)
     adata.obsm["X_emb"] = emb
 
     # --- Leiden on the embedding (shared across backends) ---
     log(f"  Leiden (res={args.leiden_resolution}) on embedding")
     sc.pp.neighbors(adata, use_rep="X_emb", n_neighbors=args.n_neighbors)
-    sc.tl.leiden(adata, resolution=args.leiden_resolution, key_added="leiden", flavor="igraph", n_iterations=2)
+    sc.tl.leiden(adata, resolution=args.leiden_resolution, key_added="leiden", flavor="igraph",
+                 n_iterations=2, random_state=args.seed)
     n_clusters = adata.obs["leiden"].nunique()
     log(f"  {n_clusters} Leiden clusters")
 
@@ -134,16 +143,46 @@ def main():
     clus_mean = lognorm_mean_by(adata.X, adata.var_names, adata.obs["leiden"].astype(str).values, shared)
     del ref
 
-    # --- cluster -> best-correlated reference centroid ---
-    R = np.corrcoef(np.vstack([clus_mean.values, ref_cent.values]))
-    nC = clus_mean.shape[0]
-    corr = R[:nC, nC:]                                   # (clusters x ref types)
-    best = corr.argmax(axis=1)
+    # --- cluster -> reference centroid, with confidence + multi-metric consensus ---
+    # Primary transfer = Pearson argmax (kept as the single reproducible mechanism so
+    # both arms are directly comparable). But we ALSO record: the best-vs-second-best
+    # margin (forcing a label when top two are near-tied is unreliable -- common for
+    # transitional/gradient states in developing cortex), and whether Spearman & cosine
+    # agree with the Pearson pick (scmap-style consensus). Low-confidence clusters are
+    # flagged (and optionally set to 'unassigned' with --unassign) for manual review
+    # rather than silently trusted.
+    from scipy.stats import rankdata
+    from sklearn.metrics.pairwise import cosine_similarity
+    C, T = clus_mean.values, ref_cent.values
+    nC = C.shape[0]
+    pear = np.corrcoef(np.vstack([C, T]))[:nC, nC:]                       # clusters x types
+    spear = np.corrcoef(np.vstack([rankdata(C, axis=1), rankdata(T, axis=1)]))[:nC, nC:]
+    cos = cosine_similarity(C, T)
+    order = np.argsort(-pear, axis=1)
+    best, second = order[:, 0], order[:, 1]
+    ridx = np.arange(nC)
+    best_corr = pear[ridx, best]
+    margin = best_corr - pear[ridx, second]
+    consensus = 1 + (spear.argmax(1) == best).astype(int) + (cos.argmax(1) == best).astype(int)
+    low_conf = (best_corr < args.min_corr) | (margin < args.min_margin)
+    labels = ref_cent.index.to_numpy()[best].astype(object)
+    if args.unassign:
+        labels[low_conf] = "unassigned"
     cluster_map = pd.DataFrame({
         "leiden": clus_mean.index,
-        "annotation": ref_cent.index[best],
-        "best_corr": corr[np.arange(nC), best],
+        "annotation": labels,
+        "best_corr": best_corr.round(4),
+        "second_label": ref_cent.index.to_numpy()[second],
+        "second_corr": pear[ridx, second].round(4),
+        "margin": margin.round(4),
+        "spearman_label": ref_cent.index.to_numpy()[spear.argmax(1)],
+        "cosine_label": ref_cent.index.to_numpy()[cos.argmax(1)],
+        "metric_consensus": consensus,                                   # 1..3 metrics agreeing w/ Pearson
+        "low_confidence": low_conf,
     }).set_index("leiden")
+    nlc = int(low_conf.sum())
+    log(f"  cluster->ref: {nlc}/{nC} low-confidence (corr<{args.min_corr} or margin<{args.min_margin}); "
+        f"full 3-metric consensus on {int((consensus == 3).sum())}/{nC}")
     cluster_map.to_csv(outdir / f"{args.tag}_{args.embedding if not args.embedding_obsm else args.embedding_obsm}_cluster_map.csv")
 
     # --- per-cell label table (keyed by cell id; consumed by profile_niches) ---
