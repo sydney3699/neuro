@@ -65,6 +65,8 @@ def main():
     p.add_argument("--embedding", default="scvi", choices=["scvi", "pca"],
                    help="embedding backend (ignored if --embedding-obsm is set)")
     p.add_argument("--embedding-obsm", default="", help="read a precomputed embedding from spatial obsm[K] (e.g. scGPT/UCE)")
+    p.add_argument("--embedding-parquet", default="", help="read a precomputed per-cell embedding from a parquet keyed by cell id (e.g. scGPT); attached by index")
+    p.add_argument("--emb-name", default="", help="label for output filenames when using --embedding-parquet (e.g. scgpt)")
     p.add_argument("--leiden-resolution", type=float, default=1.0)
     p.add_argument("--n-latent", type=int, default=30)
     p.add_argument("--scvi-epochs", type=int, default=200)
@@ -88,7 +90,8 @@ def main():
 
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
-    backend = "precomputed:" + args.embedding_obsm if args.embedding_obsm else args.embedding
+    backend = ("parquet:" + (args.emb_name or Path(args.embedding_parquet).stem) if args.embedding_parquet
+               else "obsm:" + args.embedding_obsm if args.embedding_obsm else args.embedding)
 
     # --- spatial cells: ENVI-imputed expression as an AnnData ---
     log(f"Loading spatial imputation {args.spatial_h5ad}")
@@ -101,8 +104,16 @@ def main():
     del src
     log(f"  {adata.n_obs} cells x {adata.n_vars} imputation genes")
 
-    # --- embedding ---
-    if args.embedding_obsm:
+    # --- embedding (external parquet > obsm > compute) ---
+    emb_label = args.emb_name or args.embedding_obsm or args.embedding
+    if args.embedding_parquet:
+        edf = pd.read_parquet(args.embedding_parquet).reindex(adata.obs_names)
+        if edf.isna().any().any():
+            raise SystemExit(f"{int(edf.isna().any(axis=1).sum())} cells missing from {args.embedding_parquet}")
+        emb = edf.to_numpy(dtype="float32")
+        emb_label = args.emb_name or Path(args.embedding_parquet).stem
+        log(f"  using precomputed embedding {Path(args.embedding_parquet).name} {emb.shape}")
+    elif args.embedding_obsm:
         if args.embedding_obsm not in adata.obsm:
             raise SystemExit(f"obsm['{args.embedding_obsm}'] not found for precomputed embedding")
         emb = np.asarray(adata.obsm[args.embedding_obsm])
@@ -183,18 +194,17 @@ def main():
     nlc = int(low_conf.sum())
     log(f"  cluster->ref: {nlc}/{nC} low-confidence (corr<{args.min_corr} or margin<{args.min_margin}); "
         f"full 3-metric consensus on {int((consensus == 3).sum())}/{nC}")
-    cluster_map.to_csv(outdir / f"{args.tag}_{args.embedding if not args.embedding_obsm else args.embedding_obsm}_cluster_map.csv")
+    cluster_map.to_csv(outdir / f"{args.tag}_{emb_label}_cluster_map.csv")
 
     # --- per-cell label table (keyed by cell id; consumed by profile_niches) ---
     lab = adata.obs["leiden"].astype(str).map(cluster_map["annotation"])
     per_cell = pd.DataFrame({"leiden": adata.obs["leiden"].astype(str).values,
                              "annotation": lab.values}, index=adata.obs_names)
-    tagcol = args.embedding_obsm or args.embedding
-    per_cell.to_parquet(outdir / f"{args.tag}_{tagcol}_annotation.parquet")
+    per_cell.to_parquet(outdir / f"{args.tag}_{emb_label}_annotation.parquet")
 
     log(f"DONE ({backend}). {n_clusters} clusters -> {cluster_map['annotation'].nunique()} "
         f"reference types; median cluster-centroid corr = {cluster_map['best_corr'].median():.3f}")
-    log(f"  wrote {args.tag}_{tagcol}_annotation.parquet + _cluster_map.csv to {outdir}")
+    log(f"  wrote {args.tag}_{emb_label}_annotation.parquet + _cluster_map.csv to {outdir}")
 
 
 if __name__ == "__main__":
