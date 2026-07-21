@@ -63,9 +63,13 @@ def main():
         batch_size=args.batch_size,
         return_new_adata=True,
     )
-    key = "X_scGPT" if "X_scGPT" in emb_adata.obsm else list(emb_adata.obsm)[0]
-    emb = np.asarray(emb_adata.obsm[key] if emb_adata.obsm else emb_adata.X)
-    log(f"  embedding {emb.shape} in {time.time()-t0:.0f}s (obsm key '{key}')")
+    # return_new_adata=True -> the embedding is emb_adata.X (obsm is empty)
+    if len(emb_adata.obsm) > 0:
+        key = "X_scGPT" if "X_scGPT" in emb_adata.obsm else list(emb_adata.obsm)[0]
+        emb = np.asarray(emb_adata.obsm[key])
+    else:
+        emb, key = np.asarray(emb_adata.X), "X(new_adata)"
+    log(f"  embedding {emb.shape} in {time.time()-t0:.0f}s (from '{key}')")
 
     df = pd.DataFrame(emb, index=obs_names,
                       columns=[f"scgpt_{i}" for i in range(emb.shape[1])])
