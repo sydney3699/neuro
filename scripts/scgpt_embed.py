@@ -9,10 +9,12 @@ parquet keyed by cell id. That embedding feeds the SHARED annotation scaffold
 identical Leiden + reference-centroid transfer -- only the embedding differs.
 
 Runs in the isolated `scgpt` conda env (torch 2.3.0+cu121; flash-attn not
-required). scGPT's embed_data expects an AnnData of raw-ish counts with a gene
-name column matching its vocab; ENVI imputation is continuous, so we round to
-integer pseudo-counts (as for scVI) and pass gene symbols (which overlap scGPT's
-vocab). Genes absent from the vocab are dropped by scGPT internally.
+required). scGPT's embed_data takes an AnnData with a gene-name column matching its vocab
+and bins expression internally, so we pass the continuous ENVI-imputed values
+directly (clip>=0). Do NOT round to pseudo-counts -- rounding zeroed out cells
+whose imputed values are all small, causing a zero-size-array error in scGPT's
+per-cell tokenization. Genes absent from the vocab are dropped by scGPT (~2378/
+2931 of ours match).
 """
 import argparse
 import time
@@ -45,7 +47,7 @@ def main():
     log(f"Loading spatial imputation {args.spatial_h5ad}")
     src = ad.read_h5ad(args.spatial_h5ad)
     genes = [str(g) for g in src.uns["imputation_genes"]]
-    X = np.rint(np.asarray(src.obsm["imputation"], dtype="float32")).clip(min=0)   # pseudo-counts
+    X = np.asarray(src.obsm["imputation"], dtype="float32").clip(min=0)   # continuous; scGPT bins internally (do NOT round -> rounding zeroed some cells -> zero-size error)
     adata = ad.AnnData(X=X, obs=src.obs.copy(), var=pd.DataFrame(index=genes))
     adata.var[args.gene_col] = genes          # scGPT matches this column to its vocab
     obs_names = adata.obs_names.to_numpy()
