@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2x2 Niche Comparison — V1 vs V2 (scVI/scGPT x Banksy/STAGATE)</title>
+<style>
+.viz-root {
+  color-scheme: light;
+  --surface-1:      #fcfcfb;
+  --page:           #f9f9f7;
+  --text-primary:   #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted:     #898781;
+  --grid:           #e1e0d9;
+  --baseline:       #c3c2b7;
+  --border:         rgba(11,11,11,0.10);
+  --series-v1:      #2a78d6;
+  --series-v2:      #eb6834;
+  --series-matched: #1baf7a;
+  --series-scvi:    #eda100;
+  --series-scgpt:   #e87ba4;
+  --status-good:    #0ca30c;
+  --status-critical:#d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --series-v1:      #3987e5;
+    --series-v2:      #d95926;
+    --series-matched: #199e70;
+    --series-scvi:    #c98500;
+    --series-scgpt:   #d55181;
+    --status-good:    #0ca30c;
+    --status-critical:#e66767;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --surface-1:      #1a1a19;
+  --page:           #0d0d0d;
+  --text-primary:   #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted:     #898781;
+  --grid:           #2c2c2a;
+  --baseline:       #383835;
+  --border:         rgba(255,255,255,0.10);
+  --series-v1:      #3987e5;
+  --series-v2:      #d95926;
+  --series-matched: #199e70;
+  --series-scvi:    #c98500;
+  --series-scgpt:   #d55181;
+  --status-good:    #0ca30c;
+  --status-critical:#e66767;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--page);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--text-primary);
+}
+.viz-root { background: var(--page); min-height: 100vh; padding: 32px 24px 64px; }
+.wrap { max-width: 1180px; margin: 0 auto; }
+header.page-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 28px; gap: 16px; flex-wrap: wrap;
+}
+h1 { font-size: 22px; margin: 0 0 6px; }
+.subtitle { color: var(--text-secondary); font-size: 14px; max-width: 720px; line-height: 1.5; }
+.theme-toggle {
+  border: 1px solid var(--border); background: var(--surface-1); color: var(--text-secondary);
+  border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer;
+}
+figure.card {
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+  padding: 20px 22px 16px; margin: 0 0 28px;
+}
+figure.card h2 { font-size: 15px; margin: 0 0 2px; }
+figure.card .cap { color: var(--text-secondary); font-size: 12.5px; margin: 0 0 14px; line-height: 1.5; }
+.panel-row { display: flex; gap: 24px; flex-wrap: wrap; }
+.panel { flex: 1 1 420px; min-width: 320px; }
+.panel h3 { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.03em;
+  color: var(--text-secondary); font-weight: 600; margin: 0 0 8px; }
+svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--text-secondary); }
+svg .axis-line { stroke: var(--baseline); stroke-width: 1; }
+svg .grid-line { stroke: var(--grid); stroke-width: 1; }
+svg .tick-label { font-size: 11px; fill: var(--text-secondary); }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-secondary);
+  margin-top: 10px; }
+.legend .item { display: flex; align-items: center; gap: 6px; }
+.legend .swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.legend .swatch.dot { width: 9px; height: 9px; border-radius: 50%; }
+.legend .swatch.dash { background: none; border-top: 2px dashed currentColor; height: 0; width: 16px; }
+.hit { fill: transparent; cursor: pointer; }
+.interactive { cursor: pointer; }
+.mark-dot { stroke: var(--surface-1); stroke-width: 2; }
+.tooltip {
+  position: fixed; pointer-events: none; z-index: 50;
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 10px; font-size: 12.5px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  display: none; min-width: 140px;
+}
+.tooltip .t-title { color: var(--text-secondary); font-size: 11px; margin-bottom: 4px; }
+.tooltip .t-row { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
+.tooltip .t-row .key { width: 14px; height: 2px; display: inline-block; }
+.tooltip .t-row .val { font-weight: 600; color: var(--text-primary); margin-left: auto; padding-left: 10px; }
+.tooltip .t-row .name { color: var(--text-secondary); }
+.crosshair { stroke: var(--baseline); stroke-width: 1; pointer-events: none; display: none; }
+button.table-toggle {
+  border: 1px solid var(--border); background: transparent; color: var(--text-secondary);
+  border-radius: 6px; padding: 4px 10px; font-size: 11.5px; cursor: pointer; margin-top: 8px;
+}
+table.data-table { border-collapse: collapse; font-size: 12.5px; margin-top: 10px; display: none; width: 100%; }
+table.data-table.show { display: table; }
+table.data-table th, table.data-table td { border-bottom: 1px solid var(--grid); padding: 5px 8px; text-align: left; }
+table.data-table th { color: var(--text-secondary); font-weight: 600; }
+footer.note { color: var(--text-muted); font-size: 11.5px; margin-top: 8px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+<div class="wrap">
+  <header class="page-head">
+    <div>
+      <h1>2x2 niche comparison — V1 vs V2</h1>
+      <div class="subtitle">Interactive companion to the static figures. Data from <code>compare_niches.py</code> and
+      <code>permutation_composition.py</code>, k=6–14 domain sweep, n=1000 permutations (n=200 for the composition-axis null).</div>
+    </div>
+    <button class="theme-toggle" id="themeToggle">Toggle dark mode</button>
+  </header>
+
+  <figure class="card">
+    <h2>1. Cross-method domain agreement is robust across k</h2>
+    <p class="cap">Adjusted Rand Index between Banksy and STAGATE domain assignments, per region, across the full k-sweep. Permutation test: significant (p&lt;0.05, n=1000) at every k.</p>
+    <div id="chart1"></div>
+    <div class="legend" id="legend1"></div>
+    <button class="table-toggle" data-target="table1">Table view</button>
+    <table class="data-table" id="table1"></table>
+  </figure>
+
+  <figure class="card">
+    <h2>2. Cross-region (V1 vs V2) niche matching depends on annotation method</h2>
+    <p class="cap">At k=8: how many niches match across regions vs are region-specific, per arm (left); median permutation p-value for that matching, per arm (right) — lower is more significant.</p>
+    <div class="panel-row">
+      <div class="panel"><h3>A. Matching at k=8</h3><div id="chart2a"></div></div>
+      <div class="panel"><h3>B. Match significance</h3><div id="chart2b"></div></div>
+    </div>
+    <div class="legend" id="legend2"></div>
+    <button class="table-toggle" data-target="table2">Table view</button>
+    <table class="data-table" id="table2"></table>
+  </figure>
+
+  <figure class="card">
+    <h2>3. Annotation choice (scVI vs scGPT) shifts niche composition (Q1)</h2>
+    <p class="cap">Per-domain composition-cosine similarity between the scVI and scGPT arms at k=8, per region x spatial method (top); median cosine across the full k-sweep (bottom) — the gap is not a k=8 artifact.</p>
+    <div id="chart3a"></div>
+    <div class="legend" id="legend3a"></div>
+    <div style="height:16px"></div>
+    <div id="chart3b"></div>
+    <div class="legend" id="legend3b"></div>
+    <button class="table-toggle" data-target="table3">Table view</button>
+    <table class="data-table" id="table3"></table>
+  </figure>
+
+  <footer class="note">
+    Colors: V1/V2 and scVI/scGPT follow the project's fixed categorical order (see dataviz palette). Significance
+    dots in chart 3 use the status palette (critical = real divergence, p&lt;0.05), never a categorical series hue.
+  </footer>
+</div>
+</div>
+<div class="tooltip" id="tooltip"></div>
+
+<script id="data-blob" type="application/json">
+{"crossmethod_ari_by_k": [{"region": "v1", "k": "6", "ari": "0.6471", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.8333", "n_domains_method0": "6", "n_domains_method1": "6"}, {"region": "v1", "k": "7", "ari": "0.5068", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "1.0", "n_domains_method0": "7", "n_domains_method1": "7"}, {"region": "v1", "k": "8", "ari": "0.495", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.875", "n_domains_method0": "8", "n_domains_method1": "8"}, {"region": "v1", "k": "9", "ari": "0.4805", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.7778", "n_domains_method0": "9", "n_domains_method1": "9"}, {"region": "v1", "k": "10", "ari": "0.4669", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.7", "n_domains_method0": "10", "n_domains_method1": "10"}, {"region": "v1", "k": "11", "ari": "0.4703", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.7273", "n_domains_method0": "11", "n_domains_method1": "11"}, {"region": "v1", "k": "12", "ari": "0.4344", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.6667", "n_domains_method0": "12", "n_domains_method1": "12"}, {"region": "v1", "k": "13", "ari": "0.4161", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.6923", "n_domains_method0": "13", "n_domains_method1": "13"}, {"region": "v1", "k": "14", "ari": "0.4436", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.7143", "n_domains_method0": "14", "n_domains_method1": "14"}, {"region": "v2", "k": "6", "ari": "0.5495", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.6667", "n_domains_method0": "6", "n_domains_method1": "6"}, {"region": "v2", "k": "7", "ari": "0.5822", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.8571", "n_domains_method0": "7", "n_domains_method1": "7"}, {"region": "v2", "k": "8", "ari": "0.5743", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.875", "n_domains_method0": "8", "n_domains_method1": "8"}, {"region": "v2", "k": "9", "ari": "0.5371", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.8889", "n_domains_method0": "9", "n_domains_method1": "9"}, {"region": "v2", "k": "10", "ari": "0.5173", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.8", "n_domains_method0": "10", "n_domains_method1": "10"}, {"region": "v2", "k": "11", "ari": "0.5224", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.7273", "n_domains_method0": "11", "n_domains_method1": "11"}, {"region": "v2", "k": "12", "ari": "0.5144", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.6667", "n_domains_method0": "12", "n_domains_method1": "12"}, {"region": "v2", "k": "13", "ari": "0.5142", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.6923", "n_domains_method0": "13", "n_domains_method1": "13"}, {"region": "v2", "k": "14", "ari": "0.4447", "p_value_ari": "0.001", "jaccard_matched_frac_at_thr": "0.7143", "n_domains_method0": "14", "n_domains_method1": "14"}], "crossregion_match_by_k": [{"annotation": "scvi", "method": "banksy", "k": "6", "region0": "v1", "region1": "v2", "n_niches": "6", "n_matched": "5", "n_region0_specific": "1", "n_region1_specific": "1"}, {"annotation": "scvi", "method": "banksy", "k": "7", "region0": "v1", "region1": "v2", "n_niches": "7", "n_matched": "4", "n_region0_specific": "3", "n_region1_specific": "3"}, {"annotation": "scvi", "method": "banksy", "k": "8", "region0": "v1", "region1": "v2", "n_niches": "8", "n_matched": "4", "n_region0_specific": "4", "n_region1_specific": "4"}, {"annotation": "scvi", "method": "banksy", "k": "9", "region0": "v1", "region1": "v2", "n_niches": "9", "n_matched": "6", "n_region0_specific": "3", "n_region1_specific": "3"}, {"annotation": "scvi", "method": "banksy", "k": "10", "region0": "v1", "region1": "v2", "n_niches": "10", "n_matched": "6", "n_region0_specific": "4", "n_region1_specific": "4"}, {"annotation": "scvi", "method": "banksy", "k": "11", "region0": "v1", "region1": "v2", "n_niches": "11", "n_matched": "7", "n_region0_specific": "4", "n_region1_specific": "4"}, {"annotation": "scvi", "method": "banksy", "k": "12", "region0": "v1", "region1": "v2", "n_niches": "12", "n_matched": "6", "n_region0_specific": "6", "n_region1_specific": "6"}, {"annotation": "scvi", "method": "banksy", "k": "13", "region0": "v1", "region1": "v2", "n_niches": "13", "n_matched": "7", "n_region0_specific": "6", "n_region1_specific": "6"}, {"annotation": "scvi", "method": "banksy", "k": "14", "region0": "v1", "region1": "v2", "n_niches": "14", "n_matched": "8", "n_region0_specific": "6", "n_region1_specific": "6"}, {"annotation": "scvi", "method": "stagate", "k": "6", "region0": "v1", "region1": "v2", "n_niches": "6", "n_matched": "5", "n_region0_specific": "1", "n_region1_specific": "1"}, {"annotation": "scvi", "method": "stagate", "k": "7", "region0": "v1", "region1": "v2", "n_niches": "7", "n_matched": "6", "n_region0_specific": "1", "n_region1_specific": "1"}, {"annotation": "scvi", "method": "stagate", "k": "8", "region0": "v1", "region1": "v2", "n_niches": "8", "n_matched": "7", "n_region0_specific": "1", "n_region1_specific": "1"}, {"annotation": "scvi", "method": "stagate", "k": "9", "region0": "v1", "region1": "v2", "n_niches": "9", "n_matched": "6", "n_region0_specific": "3", "n_region1_specific": "3"}, {"annotation": "scvi", "method": "stagate", "k": "10", "region0": "v1", "region1": "v2", "n_niches": "10", "n_matched": "7", "n_region0_specific": "3", "n_region1_specific": "3"}, {"annotation": "scvi", "method": "stagate", "k": "11", "region0": "v1", "region1": "v2", "n_niches": "11", "n_matched": "9", "n_region0_specific": "2", "n_region1_specific": "2"}, {"annotation": "scvi", "method": "stagate", "k": "12", "region0": "v1", "region1": "v2", "n_niches": "12", "n_matched": "8", "n_region0_specific": "4", "n_region1_specific": "4"}, {"annotation": "scvi", "method": "stagate", "k": "13", "region0": "v1", "region1": "v2", "n_niches": "13", "n_matched": "8", "n_region0_specific": "5", "n_region1_specific": "5"}, {"annotation": "scvi", "method": "stagate", "k": "14", "region0": "v1", "region1": "v2", "n_niches": "14", "n_matched": "8", "n_region0_specific": "6", "n_region1_specific": "6"}, {"annotation": "scgpt", "method": "banksy", "k": "6", "region0": "v1", "region1": "v2", "n_niches": "6", "n_matched": "5", "n_region0_specific": "1", "n_region1_specific": "1"}, {"annotation": "scgpt", "method": "banksy", "k": "7", "region0": "v1", "region1": "v2", "n_niches": "7", "n_matched": "5", "n_region0_specific": "2", "n_region1_specific": "2"}, {"annotation": "scgpt", "method": "banksy", "k": "8", "region0": "v1", "region1": "v2", "n_niches": "8", "n_matched": "5", "n_region0_specific": "3", "n_region1_specific": "3"}, {"annotation": "scgpt", "method": "banksy", "k": "9", "region0": "v1", "region1": "v2", "n_niches": "9", "n_matched": "7", "n_region0_specific": "2", "n_region1_specific": "2"}, {"annotation": "scgpt", "method": "banksy", "k": "10", "region0": "v1", "region1": "v2", "n_niches": "10", "n_matched": "7", "n_region0_specific": "3", "n_region1_specific": "3"}, {"annotation": "scgpt", "method": "banksy", "k": "11", "region0": "v1", "region1": "v2", "n_niches": "11", "n_matched": "7", "n_region0_specific": "4", "n_region1_specific": "4"}, {"annotation": "scgpt", "method": "banksy", "k": "12", "region0": "v1", "region1": "v2", "n_niches": "12", "n_matched": "6", "n_region0_specific": "6", "n_region1_specific": "6"}, {"annotation": "scgpt", "method": "banksy", "k": "13", "region0": "v1", "region1": "v2", "n_niches": "13", "n_matched": "7", "n_region0_specific": "6", "n_region1_specific": "6"}, {"annotation": "scgpt", "method": "banksy", "k": "14", "region0": "v1", "region1": "v2", "n_niches": "14", "n_matched": "7", "n_region0_specific": "7", "n_region1_specific": "7"}, {"annotation": "scgpt", "method": "stagate", "k": "6", "region0": "v1", "region1": "v2", "n_niches": "6", "n_matched": "6", "n_region0_specific": "0", "n_region1_specific": "0"}, {"annotation": "scgpt", "method": "stagate", "k": "7", "region0": "v1", "region1": "v2", "n_niches": "7", "n_matched": "7", "n_region0_specific": "0", "n_region1_specific": "0"}, {"annotation": "scgpt", "method": "stagate", "k": "8", "region0": "v1", "region1": "v2", "n_niches": "8", "n_matched": "7", "n_region0_specific": "1", "n_region1_specific": "1"}, {"annotation": "scgpt", "method": "stagate", "k": "9", "region0": "v1", "region1": "v2", "n_niches": "9", "n_matched": "7", "n_region0_specific": "2", "n_region1_specific": "2"}, {"annotation": "scgpt", "method": "stagate", "k": "10", "region0": "v1", "region1": "v2", "n_niches": "10", "n_matched": "8", "n_region0_specific": "2", "n_region1_specific": "2"}, {"annotation": "scgpt", "method": "stagate", "k": "11", "region0": "v1", "region1": "v2", "n_niches": "11", "n_matched": "9", "n_region0_specific": "2", "n_region1_specific": "2"}, {"annotation": "scgpt", "method": "stagate", "k": "12", "region0": "v1", "region1": "v2", "n_niches": "12", "n_matched": "7", "n_region0_specific": "5", "n_region1_specific": "5"}, {"annotation": "scgpt", "method": "stagate", "k": "13", "region0": "v1", "region1": "v2", "n_niches": "13", "n_matched": "9", "n_region0_specific": "4", "n_region1_specific": "4"}, {"annotation": "scgpt", "method": "stagate", "k": "14", "region0": "v1", "region1": "v2", "n_niches": "14", "n_matched": "10", "n_region0_specific": "4", "n_region1_specific": "4"}], "annotation_axis_cosine_by_k": [{"region": "v1", "method": "banksy", "k": "6", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "6", "cosine_median": "0.5946", "cosine_min": "0.1199", "L1_median": "1.0446"}, {"region": "v1", "method": "banksy", "k": "7", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "7", "cosine_median": "0.6097", "cosine_min": "0.1204", "L1_median": "1.0062"}, {"region": "v1", "method": "banksy", "k": "8", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "8", "cosine_median": "0.6066", "cosine_min": "0.1203", "L1_median": "1.0243"}, {"region": "v1", "method": "banksy", "k": "9", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "9", "cosine_median": "0.6028", "cosine_min": "0.1173", "L1_median": "1.0435"}, {"region": "v1", "method": "banksy", "k": "10", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "10", "cosine_median": "0.6054", "cosine_min": "0.1168", "L1_median": "1.0291"}, {"region": "v1", "method": "banksy", "k": "11", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "11", "cosine_median": "0.6123", "cosine_min": "0.1308", "L1_median": "1.0435"}, {"region": "v1", "method": "banksy", "k": "12", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "12", "cosine_median": "0.621", "cosine_min": "0.1303", "L1_median": "1.0241"}, {"region": "v1", "method": "banksy", "k": "13", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "13", "cosine_median": "0.6672", "cosine_min": "0.0826", "L1_median": "1.0104"}, {"region": "v1", "method": "banksy", "k": "14", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "14", "cosine_median": "0.6351", "cosine_min": "0.0733", "L1_median": "0.9959"}, {"region": "v1", "method": "stagate", "k": "6", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "6", "cosine_median": "0.693", "cosine_min": "0.097", "L1_median": "0.9684"}, {"region": "v1", "method": "stagate", "k": "7", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "7", "cosine_median": "0.6871", "cosine_min": "0.0855", "L1_median": "1.0443"}, {"region": "v1", "method": "stagate", "k": "8", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "8", "cosine_median": "0.5203", "cosine_min": "0.0693", "L1_median": "1.1217"}, {"region": "v1", "method": "stagate", "k": "9", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "9", "cosine_median": "0.6555", "cosine_min": "0.0687", "L1_median": "1.0724"}, {"region": "v1", "method": "stagate", "k": "10", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "10", "cosine_median": "0.682", "cosine_min": "0.0634", "L1_median": "1.01"}, {"region": "v1", "method": "stagate", "k": "11", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "11", "cosine_median": "0.6678", "cosine_min": "0.061", "L1_median": "1.0054"}, {"region": "v1", "method": "stagate", "k": "12", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "12", "cosine_median": "0.5489", "cosine_min": "0.0539", "L1_median": "1.0413"}, {"region": "v1", "method": "stagate", "k": "13", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "13", "cosine_median": "0.6058", "cosine_min": "0.0539", "L1_median": "1.0068"}, {"region": "v1", "method": "stagate", "k": "14", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "14", "cosine_median": "0.6177", "cosine_min": "0.0557", "L1_median": "1.0329"}, {"region": "v2", "method": "banksy", "k": "6", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "6", "cosine_median": "0.7558", "cosine_min": "0.1591", "L1_median": "0.7585"}, {"region": "v2", "method": "banksy", "k": "7", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "7", "cosine_median": "0.7119", "cosine_min": "0.1601", "L1_median": "0.806"}, {"region": "v2", "method": "banksy", "k": "8", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "8", "cosine_median": "0.7627", "cosine_min": "0.1536", "L1_median": "0.7143"}, {"region": "v2", "method": "banksy", "k": "9", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "9", "cosine_median": "0.7319", "cosine_min": "0.1463", "L1_median": "0.7737"}, {"region": "v2", "method": "banksy", "k": "10", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "10", "cosine_median": "0.77", "cosine_min": "0.1454", "L1_median": "0.7121"}, {"region": "v2", "method": "banksy", "k": "11", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "11", "cosine_median": "0.7629", "cosine_min": "0.1424", "L1_median": "0.6762"}, {"region": "v2", "method": "banksy", "k": "12", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "12", "cosine_median": "0.773", "cosine_min": "0.1467", "L1_median": "0.6703"}, {"region": "v2", "method": "banksy", "k": "13", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "13", "cosine_median": "0.7911", "cosine_min": "0.0891", "L1_median": "0.6845"}, {"region": "v2", "method": "banksy", "k": "14", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "14", "cosine_median": "0.7732", "cosine_min": "0.1117", "L1_median": "0.6961"}, {"region": "v2", "method": "stagate", "k": "6", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "6", "cosine_median": "0.7769", "cosine_min": "0.1897", "L1_median": "0.7604"}, {"region": "v2", "method": "stagate", "k": "7", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "7", "cosine_median": "0.7552", "cosine_min": "0.1413", "L1_median": "0.9114"}, {"region": "v2", "method": "stagate", "k": "8", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "8", "cosine_median": "0.7698", "cosine_min": "0.1395", "L1_median": "0.7985"}, {"region": "v2", "method": "stagate", "k": "9", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "9", "cosine_median": "0.7732", "cosine_min": "0.0934", "L1_median": "0.8444"}, {"region": "v2", "method": "stagate", "k": "10", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "10", "cosine_median": "0.7395", "cosine_min": "0.0909", "L1_median": "0.9074"}, {"region": "v2", "method": "stagate", "k": "11", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "11", "cosine_median": "0.7744", "cosine_min": "0.0912", "L1_median": "0.8439"}, {"region": "v2", "method": "stagate", "k": "12", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "12", "cosine_median": "0.7462", "cosine_min": "0.0891", "L1_median": "0.7781"}, {"region": "v2", "method": "stagate", "k": "13", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "13", "cosine_median": "0.723", "cosine_min": "0.0744", "L1_median": "0.7347"}, {"region": "v2", "method": "stagate", "k": "14", "annotation0": "scvi", "annotation1": "scgpt", "n_domains": "14", "cosine_median": "0.7599", "cosine_min": "0.0734", "L1_median": "0.7453"}], "annaxis_v1_banksy": [{"domain": "d0", "composition_cosine": "0.763", "L1_distance": "0.666", "top_celltype_shifts": "EN-IT-UL-1+0.16; EN-IT-L4-V1-0.13; EN-IT-DL-3+0.12"}, {"domain": "d1", "composition_cosine": "0.822", "L1_distance": "0.607", "top_celltype_shifts": "EN-ET-3-0.23; EN-ET-5+0.15; EN-IT-DL-3+0.07"}, {"domain": "d2", "composition_cosine": "0.12", "L1_distance": "1.682", "top_celltype_shifts": "EN-IT-L4-V1-0.75; EN-IT-UL-1+0.58; EN-IT-DL-3+0.24"}, {"domain": "d3", "composition_cosine": "0.61", "L1_distance": "1.111", "top_celltype_shifts": "EN-IT-DL-3-0.43; EN-L2+0.31; EN-IT-UL-1+0.12"}, {"domain": "d4", "composition_cosine": "0.567", "L1_distance": "1.005", "top_celltype_shifts": "EN-IT-L4-V1-0.39; EN-IT-UL-1+0.35; EN-L2+0.14"}, {"domain": "d5", "composition_cosine": "0.255", "L1_distance": "1.364", "top_celltype_shifts": "EN-IT-DL-1-0.53; EN-IT-UL-1+0.42; EN-IT-DL-3+0.21"}, {"domain": "d6", "composition_cosine": "0.703", "L1_distance": "0.802", "top_celltype_shifts": "EN-ET-3-0.37; EN-ET-5+0.20; EN-IT-DL-3+0.08"}, {"domain": "d7", "composition_cosine": "0.603", "L1_distance": "1.043", "top_celltype_shifts": "IPC+0.35; Dividing progenitor-0.30; EN-Mig-1-0.22"}], "annaxis_v1_banksy_pvalues": [{"domain": "d0", "observed_cosine": "0.7634", "null_median": "0.3773", "null_p05": "0.3453", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d1", "observed_cosine": "0.8222", "null_median": "0.3776", "null_p05": "0.3556", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d2", "observed_cosine": "0.1203", "null_median": "0.3772", "null_p05": "0.3685", "p_value": "0.001", "n_perm_valid": "1000"}, {"domain": "d3", "observed_cosine": "0.6104", "null_median": "0.3767", "null_p05": "0.3518", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d4", "observed_cosine": "0.5669", "null_median": "0.3776", "null_p05": "0.3652", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d5", "observed_cosine": "0.2546", "null_median": "0.3777", "null_p05": "0.3696", "p_value": "0.001", "n_perm_valid": "1000"}, {"domain": "d6", "observed_cosine": "0.7034", "null_median": "0.3765", "null_p05": "0.3627", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d7", "observed_cosine": "0.6028", "null_median": "0.3213", "null_p05": "0.125", "p_value": "0.955", "n_perm_valid": "1000"}], "annaxis_v1_stagate": [{"domain": "d0", "composition_cosine": "0.169", "L1_distance": "1.602", "top_celltype_shifts": "EN-IT-UL-1+0.47; EN-IT-L4-V1-0.39; EN-IT-DL-1-0.35"}, {"domain": "d1", "composition_cosine": "0.941", "L1_distance": "0.428", "top_celltype_shifts": "EN-ET-5-0.08; EN-L2+0.06; EN-IT-DL-3+0.06"}, {"domain": "d2", "composition_cosine": "0.069", "L1_distance": "1.688", "top_celltype_shifts": "EN-IT-DL-1-0.76; EN-IT-UL-1+0.59; EN-IT-DL-3+0.24"}, {"domain": "d3", "composition_cosine": "0.364", "L1_distance": "1.174", "top_celltype_shifts": "EN-IT-L4-V1-0.57; EN-IT-UL-1+0.46; EN-L2+0.07"}, {"domain": "d4", "composition_cosine": "0.842", "L1_distance": "0.814", "top_celltype_shifts": "EN-IT-DL-1-0.23; EN-IT-UL-1+0.16; EN-IT-DL-3+0.14"}, {"domain": "d5", "composition_cosine": "0.676", "L1_distance": "1.069", "top_celltype_shifts": "EN-IT-DL-3-0.36; EN-L2+0.29; EN-IT-UL-1+0.18"}, {"domain": "d6", "composition_cosine": "0.717", "L1_distance": "0.742", "top_celltype_shifts": "EN-ET-3-0.36; EN-ET-5+0.22; EN-IT-DL-3+0.07"}, {"domain": "d7", "composition_cosine": "0.106", "L1_distance": "1.731", "top_celltype_shifts": "EN-IT-L4-V1-0.82; EN-IT-UL-1+0.61; EN-IT-DL-3+0.25"}], "annaxis_v1_stagate_pvalues": [{"domain": "d0", "observed_cosine": "0.1686", "null_median": "0.377", "null_p05": "0.3608", "p_value": "0.001", "n_perm_valid": "1000"}, {"domain": "d1", "observed_cosine": "0.9405", "null_median": "0.3774", "null_p05": "0.3489", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d2", "observed_cosine": "0.0693", "null_median": "0.3777", "null_p05": "0.3639", "p_value": "0.001", "n_perm_valid": "1000"}, {"domain": "d3", "observed_cosine": "0.3644", "null_median": "0.3778", "null_p05": "0.3635", "p_value": "0.0619", "n_perm_valid": "1000"}, {"domain": "d4", "observed_cosine": "0.8424", "null_median": "0.3771", "null_p05": "0.3633", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d5", "observed_cosine": "0.6762", "null_median": "0.3776", "null_p05": "0.3608", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d6", "observed_cosine": "0.7167", "null_median": "0.3771", "null_p05": "0.3666", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d7", "observed_cosine": "0.1058", "null_median": "0.3772", "null_p05": "0.3671", "p_value": "0.001", "n_perm_valid": "1000"}], "annaxis_v2_banksy": [{"domain": "d0", "composition_cosine": "0.618", "L1_distance": "1.099", "top_celltype_shifts": "EN-IT-DL-3-0.48; EN-L2+0.32; EN-Mig-1+0.12"}, {"domain": "d1", "composition_cosine": "0.154", "L1_distance": "1.487", "top_celltype_shifts": "EN-IT-DL-1-0.66; EN-IT-UL-1+0.42; EN-IT-DL-3+0.27"}, {"domain": "d2", "composition_cosine": "0.815", "L1_distance": "0.641", "top_celltype_shifts": "EN-ET-3-0.29; EN-ET-5+0.16; EN-IT-DL-3+0.06"}, {"domain": "d3", "composition_cosine": "0.711", "L1_distance": "0.908", "top_celltype_shifts": "EN-IT-DL-3+0.43; EN-IT-DL-1-0.21; EN-IT-UL-1-0.16"}, {"domain": "d4", "composition_cosine": "0.627", "L1_distance": "0.788", "top_celltype_shifts": "EN-IT-DL-3+0.35; EN-IT-DL-1-0.32; EN-ET-5-0.03"}, {"domain": "d5", "composition_cosine": "0.987", "L1_distance": "0.221", "top_celltype_shifts": "EN-L2+0.08; EN-IT-UL-1-0.07; EN-IT-L4-V1-0.02"}, {"domain": "d6", "composition_cosine": "0.833", "L1_distance": "0.528", "top_celltype_shifts": "EN-ET-3-0.24; EN-ET-5+0.11; EN-IT-DL-3+0.05"}, {"domain": "d7", "composition_cosine": "0.926", "L1_distance": "0.379", "top_celltype_shifts": "EN-ET-3-0.13; EN-ET-5+0.06; EN-IT-DL-3+0.05"}], "annaxis_v2_banksy_pvalues": [{"domain": "d0", "observed_cosine": "0.6185", "null_median": "0.7402", "null_p05": "0.7048", "p_value": "0.001", "n_perm_valid": "1000"}, {"domain": "d1", "observed_cosine": "0.1536", "null_median": "0.7407", "null_p05": "0.7311", "p_value": "0.001", "n_perm_valid": "1000"}, {"domain": "d2", "observed_cosine": "0.8146", "null_median": "0.7402", "null_p05": "0.7253", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d3", "observed_cosine": "0.7108", "null_median": "0.7405", "null_p05": "0.7299", "p_value": "0.001", "n_perm_valid": "1000"}, {"domain": "d4", "observed_cosine": "0.6272", "null_median": "0.7401", "null_p05": "0.716", "p_value": "0.001", "n_perm_valid": "1000"}, {"domain": "d5", "observed_cosine": "0.9869", "null_median": "0.7405", "null_p05": "0.7264", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d6", "observed_cosine": "0.8334", "null_median": "0.741", "null_p05": "0.7195", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d7", "observed_cosine": "0.9259", "null_median": "0.738", "null_p05": "0.6929", "p_value": "1.0", "n_perm_valid": "1000"}], "annaxis_v2_stagate": [{"domain": "d0", "composition_cosine": "0.684", "L1_distance": "0.942", "top_celltype_shifts": "EN-IT-DL-1-0.31; EN-IT-DL-3+0.19; EN-IT-UL-1+0.14"}, {"domain": "d1", "composition_cosine": "0.671", "L1_distance": "0.944", "top_celltype_shifts": "EN-IT-DL-3+0.45; EN-IT-DL-1-0.24; EN-IT-UL-1-0.14"}, {"domain": "d2", "composition_cosine": "0.848", "L1_distance": "0.537", "top_celltype_shifts": "EN-ET-3-0.17; EN-IT-DL-3+0.08; EN-L2+0.06"}, {"domain": "d3", "composition_cosine": "0.139", "L1_distance": "1.568", "top_celltype_shifts": "EN-IT-DL-1-0.73; EN-IT-UL-1+0.45; EN-IT-DL-3+0.30"}, {"domain": "d4", "composition_cosine": "0.754", "L1_distance": "0.914", "top_celltype_shifts": "EN-IT-DL-3-0.41; EN-L2+0.26; EN-IT-UL-1+0.13"}, {"domain": "d5", "composition_cosine": "0.786", "L1_distance": "0.682", "top_celltype_shifts": "EN-ET-3-0.33; EN-ET-5+0.24; EN-ET-2+0.04"}, {"domain": "d6", "composition_cosine": "0.934", "L1_distance": "0.466", "top_celltype_shifts": "EN-IT-DL-3+0.19; EN-IT-UL-1-0.17; EN-L2+0.04"}, {"domain": "d7", "composition_cosine": "0.976", "L1_distance": "0.297", "top_celltype_shifts": "EN-IT-DL-3+0.05; EN-ET-3-0.05; EN-IT-DL-1-0.05"}], "annaxis_v2_stagate_pvalues": [{"domain": "d0", "observed_cosine": "0.6839", "null_median": "0.74", "null_p05": "0.7177", "p_value": "0.001", "n_perm_valid": "1000"}, {"domain": "d1", "observed_cosine": "0.671", "null_median": "0.7406", "null_p05": "0.7283", "p_value": "0.001", "n_perm_valid": "1000"}, {"domain": "d2", "observed_cosine": "0.8481", "null_median": "0.7396", "null_p05": "0.7179", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d3", "observed_cosine": "0.1395", "null_median": "0.7404", "null_p05": "0.7306", "p_value": "0.001", "n_perm_valid": "1000"}, {"domain": "d4", "observed_cosine": "0.754", "null_median": "0.7403", "null_p05": "0.7187", "p_value": "0.8511", "n_perm_valid": "1000"}, {"domain": "d5", "observed_cosine": "0.7855", "null_median": "0.7414", "null_p05": "0.7273", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d6", "observed_cosine": "0.9339", "null_median": "0.7406", "null_p05": "0.7278", "p_value": "1.0", "n_perm_valid": "1000"}, {"domain": "d7", "observed_cosine": "0.9765", "null_median": "0.7385", "null_p05": "0.7005", "p_value": "1.0", "n_perm_valid": "1000"}], "crossregion_banksy_scvi_pvalues": [{"v1_niche": "d0", "best_match": "d7", "observed_cosine": "0.8622", "null_median": "0.6232", "null_p95": "0.6569", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d1", "best_match": "d6", "observed_cosine": "0.9955", "null_median": "0.6244", "null_p95": "0.6466", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d2", "best_match": "d3", "observed_cosine": "0.204", "null_median": "0.6239", "null_p95": "0.639", "p_value": "1.0", "matched_thr": "False"}, {"v1_niche": "d3", "best_match": "d0", "observed_cosine": "0.9951", "null_median": "0.6245", "null_p95": "0.6521", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d4", "best_match": "d0", "observed_cosine": "0.7279", "null_median": "0.6238", "null_p95": "0.6428", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d5", "best_match": "d1", "observed_cosine": "0.9688", "null_median": "0.6241", "null_p95": "0.6411", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d6", "best_match": "d2", "observed_cosine": "0.9255", "null_median": "0.6243", "null_p95": "0.6424", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d7", "best_match": "d6", "observed_cosine": "0.011", "null_median": "0.5799", "null_p95": "0.7904", "p_value": "1.0", "matched_thr": "False"}], "crossregion_stagate_scvi_pvalues": [{"v1_niche": "d0", "best_match": "d3", "observed_cosine": "0.6861", "null_median": "0.6229", "null_p95": "0.642", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d1", "best_match": "d7", "observed_cosine": "0.8843", "null_median": "0.6222", "null_p95": "0.6524", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d2", "best_match": "d3", "observed_cosine": "0.9957", "null_median": "0.6229", "null_p95": "0.6406", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d3", "best_match": "d4", "observed_cosine": "0.4321", "null_median": "0.6232", "null_p95": "0.6403", "p_value": "1.0", "matched_thr": "False"}, {"v1_niche": "d4", "best_match": "d0", "observed_cosine": "0.9588", "null_median": "0.6224", "null_p95": "0.6414", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d5", "best_match": "d4", "observed_cosine": "0.9797", "null_median": "0.622", "null_p95": "0.6434", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d6", "best_match": "d5", "observed_cosine": "0.9436", "null_median": "0.6225", "null_p95": "0.6397", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d7", "best_match": "d1", "observed_cosine": "0.1867", "null_median": "0.6226", "null_p95": "0.6397", "p_value": "1.0", "matched_thr": "False"}], "crossregion_banksy_scgpt_pvalues": [{"v1_niche": "d0", "best_match": "d7", "observed_cosine": "0.8946", "null_median": "0.98", "null_p95": "0.9887", "p_value": "1.0", "matched_thr": "True"}, {"v1_niche": "d1", "best_match": "d6", "observed_cosine": "0.9832", "null_median": "0.9802", "null_p95": "0.9873", "p_value": "0.2428", "matched_thr": "True"}, {"v1_niche": "d2", "best_match": "d1", "observed_cosine": "0.9593", "null_median": "0.9802", "null_p95": "0.9868", "p_value": "1.0", "matched_thr": "True"}, {"v1_niche": "d3", "best_match": "d0", "observed_cosine": "0.9973", "null_median": "0.9802", "null_p95": "0.9876", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d4", "best_match": "d5", "observed_cosine": "0.9869", "null_median": "0.9804", "null_p95": "0.9866", "p_value": "0.048", "matched_thr": "True"}, {"v1_niche": "d5", "best_match": "d1", "observed_cosine": "0.9837", "null_median": "0.9802", "null_p95": "0.9866", "p_value": "0.1568", "matched_thr": "True"}, {"v1_niche": "d6", "best_match": "d2", "observed_cosine": "0.9366", "null_median": "0.9802", "null_p95": "0.9865", "p_value": "1.0", "matched_thr": "True"}, {"v1_niche": "d7", "best_match": "d0", "observed_cosine": "0.0785", "null_median": "0.942", "null_p95": "0.9876", "p_value": "1.0", "matched_thr": "False"}], "crossregion_stagate_scgpt_pvalues": [{"v1_niche": "d0", "best_match": "d3", "observed_cosine": "0.9986", "null_median": "0.9799", "null_p95": "0.9863", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d1", "best_match": "d7", "observed_cosine": "0.9305", "null_median": "0.9797", "null_p95": "0.9877", "p_value": "1.0", "matched_thr": "True"}, {"v1_niche": "d2", "best_match": "d3", "observed_cosine": "0.9917", "null_median": "0.9798", "null_p95": "0.9861", "p_value": "0.002", "matched_thr": "True"}, {"v1_niche": "d3", "best_match": "d3", "observed_cosine": "0.9852", "null_median": "0.9799", "null_p95": "0.9859", "p_value": "0.0689", "matched_thr": "True"}, {"v1_niche": "d4", "best_match": "d0", "observed_cosine": "0.9663", "null_median": "0.9798", "null_p95": "0.9861", "p_value": "1.0", "matched_thr": "True"}, {"v1_niche": "d5", "best_match": "d4", "observed_cosine": "0.994", "null_median": "0.98", "null_p95": "0.9866", "p_value": "0.001", "matched_thr": "True"}, {"v1_niche": "d6", "best_match": "d5", "observed_cosine": "0.9507", "null_median": "0.9801", "null_p95": "0.9864", "p_value": "1.0", "matched_thr": "True"}, {"v1_niche": "d7", "best_match": "d3", "observed_cosine": "0.9826", "null_median": "0.9798", "null_p95": "0.9858", "p_value": "0.1838", "matched_thr": "True"}]}
+</script>
+<script>
+const DATA = JSON.parse(document.getElementById('data-blob').textContent);
+const NS = "http://www.w3.org/2000/svg";
+const tooltip = document.getElementById('tooltip');
+
+function svgEl(tag, attrs) {
+  const el = document.createElementNS(NS, tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function cssVar(name) {
+  return getComputedStyle(document.querySelector('.viz-root')).getPropertyValue(name).trim();
+}
+function showTooltip(x, y, html) {
+  tooltip.innerHTML = html;
+  tooltip.style.display = 'block';
+  const pad = 14;
+  let left = x + pad, top = y + pad;
+  const rect = tooltip.getBoundingClientRect();
+  if (left + rect.width > window.innerWidth) left = x - rect.width - pad;
+  if (top + rect.height > window.innerHeight) top = y - rect.height - pad;
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
+}
+function hideTooltip() { tooltip.style.display = 'none'; }
+
+function scaleLinear(domain, range) {
+  const [d0, d1] = domain, [r0, r1] = range;
+  return v => r0 + (v - d0) / (d1 - d0) * (r1 - r0);
+}
+function niceTicks(maxVal, step) {
+  const ticks = [];
+  for (let v = 0; v <= maxVal + 1e-9; v += step) ticks.push(Math.round(v * 100) / 100);
+  return ticks;
+}
+
+// ---------- Chart 1: line chart, ARI vs k, per region ----------
+function renderChart1() {
+  const rows = DATA.crossmethod_ari_by_k;
+  const byRegion = { v1: [], v2: [] };
+  rows.forEach(r => byRegion[r.region].push({ k: +r.k, ari: +r.ari, p: +r.p_value_ari }));
+  ['v1', 'v2'].forEach(r => byRegion[r].sort((a, b) => a.k - b.k));
+
+  const W = 720, H = 320, M = { t: 16, r: 24, b: 36, l: 48 };
+  const svg = svgEl('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}` });
+  const ks = byRegion.v1.map(d => d.k);
+  const x = scaleLinear([ks[0], ks[ks.length - 1]], [M.l, W - M.r]);
+  const maxAri = Math.max(...rows.map(r => +r.ari));
+  const y = scaleLinear([0, Math.max(0.7, maxAri * 1.15)], [H - M.b, M.t]);
+
+  const yTicks = niceTicks(Math.max(0.7, maxAri * 1.15), 0.1);
+  yTicks.forEach(t => {
+    svg.appendChild(svgEl('line', { class: 'grid-line', x1: M.l, x2: W - M.r, y1: y(t), y2: y(t) }));
+    const lab = svgEl('text', { class: 'tick-label', x: M.l - 8, y: y(t) + 4, 'text-anchor': 'end' });
+    lab.textContent = t.toFixed(1);
+    svg.appendChild(lab);
+  });
+  ks.forEach(k => {
+    const lab = svgEl('text', { class: 'tick-label', x: x(k), y: H - M.b + 18, 'text-anchor': 'middle' });
+    lab.textContent = k;
+    svg.appendChild(lab);
+  });
+  svg.appendChild(svgEl('line', { class: 'axis-line', x1: M.l, x2: M.l, y1: M.t, y2: H - M.b }));
+  svg.appendChild(svgEl('line', { class: 'axis-line', x1: M.l, x2: W - M.r, y1: H - M.b, y2: H - M.b }));
+
+  const crosshair = svgEl('line', { class: 'crosshair', y1: M.t, y2: H - M.b });
+  svg.appendChild(crosshair);
+
+  const colors = { v1: 'var(--series-v1)', v2: 'var(--series-v2)' };
+  const paths = {};
+  ['v1', 'v2'].forEach(r => {
+    const d = byRegion[r].map((pt, i) => `${i === 0 ? 'M' : 'L'}${x(pt.k)},${y(pt.ari)}`).join(' ');
+    svg.appendChild(svgEl('path', { d, fill: 'none', stroke: colors[r], 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+    byRegion[r].forEach(pt => {
+      svg.appendChild(svgEl('circle', { class: 'mark-dot', cx: x(pt.k), cy: y(pt.ari), r: 4, fill: colors[r] }));
+    });
+    paths[r] = byRegion[r];
+  });
+
+  const hit = svgEl('rect', { class: 'hit', x: M.l, y: M.t, width: W - M.l - M.r, height: H - M.t - M.b });
+  hit.addEventListener('pointermove', (e) => {
+    const rect = svg.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / rect.width * W;
+    const kApprox = ks.reduce((best, k) => Math.abs(x(k) - mx) < Math.abs(x(best) - mx) ? k : best, ks[0]);
+    crosshair.setAttribute('x1', x(kApprox)); crosshair.setAttribute('x2', x(kApprox));
+    crosshair.style.display = 'block';
+    const v1pt = byRegion.v1.find(p => p.k === kApprox);
+    const v2pt = byRegion.v2.find(p => p.k === kApprox);
+    const html = `<div class="t-title">k = ${kApprox}</div>
+      <div class="t-row"><span class="key" style="background:${colors.v1}"></span><span class="name">V1</span><span class="val">ARI ${v1pt.ari.toFixed(3)} (p=${v1pt.p})</span></div>
+      <div class="t-row"><span class="key" style="background:${colors.v2}"></span><span class="name">V2</span><span class="val">ARI ${v2pt.ari.toFixed(3)} (p=${v2pt.p})</span></div>`;
+    showTooltip(e.clientX, e.clientY, html);
+  });
+  hit.addEventListener('pointerleave', () => { hideTooltip(); crosshair.style.display = 'none'; });
+  svg.appendChild(hit);
+
+  document.getElementById('chart1').appendChild(svg);
+  document.getElementById('legend1').innerHTML = `
+    <span class="item"><span class="swatch" style="background:${colors.v1}"></span>V1</span>
+    <span class="item"><span class="swatch" style="background:${colors.v2}"></span>V2</span>`;
+
+  const tbl = document.getElementById('table1');
+  tbl.innerHTML = '<tr><th>Region</th><th>k</th><th>ARI</th><th>p-value</th><th>Jaccard-matched frac</th></tr>' +
+    rows.map(r => `<tr><td>${r.region.toUpperCase()}</td><td>${r.k}</td><td>${(+r.ari).toFixed(3)}</td><td>${r.p_value_ari}</td><td>${(+r.jaccard_matched_frac_at_thr).toFixed(3)}</td></tr>`).join('');
+}
+
+// ---------- Chart 2A: stacked bar (matched / v1-specific / v2-specific) at k=8 ----------
+function renderChart2a() {
+  const rows = DATA.crossregion_match_by_k.filter(r => +r.k === 8);
+  const methodOrder = ['banksy', 'stagate'], annOrder = ['scvi', 'scgpt'];
+  const methodLabel = { banksy: 'Banksy', stagate: 'STAGATE' };
+  const annLabel = { scvi: 'scVI', scgpt: 'scGPT' };
+  const arms = [];
+  methodOrder.forEach(m => annOrder.forEach(a => {
+    const r = rows.find(r => r.method === m && r.annotation === a);
+    if (r) arms.push({ ...r, label: `${annLabel[a]} x ${methodLabel[m]}` });
+  }));
+
+  const W = 500, H = 320, M = { t: 16, r: 16, b: 56, l: 40 };
+  const svg = svgEl('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}` });
+  const maxTotal = Math.max(...arms.map(a => +a.n_matched + +a.n_region0_specific + +a.n_region1_specific));
+  const y = scaleLinear([0, maxTotal * 1.1], [H - M.b, M.t]);
+  const bw = (W - M.l - M.r) / arms.length * 0.6;
+  const step = (W - M.l - M.r) / arms.length;
+
+  niceTicks(maxTotal * 1.1, Math.ceil(maxTotal / 5)).forEach(t => {
+    svg.appendChild(svgEl('line', { class: 'grid-line', x1: M.l, x2: W - M.r, y1: y(t), y2: y(t) }));
+    const lab = svgEl('text', { class: 'tick-label', x: M.l - 8, y: y(t) + 4, 'text-anchor': 'end' });
+    lab.textContent = Math.round(t);
+    svg.appendChild(lab);
+  });
+  svg.appendChild(svgEl('line', { class: 'axis-line', x1: M.l, x2: M.l, y1: M.t, y2: H - M.b }));
+  svg.appendChild(svgEl('line', { class: 'axis-line', x1: M.l, x2: W - M.r, y1: H - M.b, y2: H - M.b }));
+
+  const segDefs = [
+    { key: 'n_matched', label: 'Matched', color: 'var(--series-matched)' },
+    { key: 'n_region0_specific', label: 'V1-specific', color: 'var(--series-v1)' },
+    { key: 'n_region1_specific', label: 'V2-specific', color: 'var(--series-v2)' },
+  ];
+  arms.forEach((arm, i) => {
+    const cx = M.l + step * i + step / 2;
+    let bottom = 0;
+    segDefs.forEach(seg => {
+      const v = +arm[seg.key];
+      const y0 = y(bottom), y1 = y(bottom + v);
+      const rect = svgEl('rect', {
+        x: cx - bw / 2, y: y1, width: bw, height: Math.max(0, y0 - y1),
+        fill: seg.color, class: 'interactive'
+      });
+      rect.style.cursor = 'pointer';
+      rect.addEventListener('pointermove', (e) => {
+        showTooltip(e.clientX, e.clientY, `<div class="t-title">${arm.label}</div>
+          <div class="t-row"><span class="key" style="background:${seg.color}"></span><span class="name">${seg.label}</span><span class="val">${v}</span></div>`);
+      });
+      rect.addEventListener('pointerleave', hideTooltip);
+      svg.appendChild(rect);
+      if (v >= 1.2) {
+        const lab = svgEl('text', { x: cx, y: (y0 + y1) / 2 + 4, 'text-anchor': 'middle', fill: 'white', 'font-size': 11, 'font-weight': 700 });
+        lab.textContent = Math.round(v);
+        svg.appendChild(lab);
+      }
+      bottom += v;
+    });
+    const lab = svgEl('text', { class: 'tick-label', x: cx, y: H - M.b + 16, 'text-anchor': 'middle', 'font-size': 10 });
+    const words = arm.label.split(' x ');
+    svg.appendChild(lab);
+    const t1 = svgEl('tspan', { x: cx, dy: 0 }); t1.textContent = words[0]; lab.appendChild(t1);
+    const t2 = svgEl('tspan', { x: cx, dy: 12 }); t2.textContent = 'x ' + words[1]; lab.appendChild(t2);
+  });
+
+  document.getElementById('chart2a').appendChild(svg);
+  document.getElementById('legend2').innerHTML = segDefs.map(s =>
+    `<span class="item"><span class="swatch" style="background:${s.color}"></span>${s.label}</span>`).join('');
+
+  const tbl = document.getElementById('table2');
+  tbl.innerHTML = '<tr><th>Arm</th><th>Matched</th><th>V1-specific</th><th>V2-specific</th></tr>' +
+    arms.map(a => `<tr><td>${a.label}</td><td>${a.n_matched}</td><td>${a.n_region0_specific}</td><td>${a.n_region1_specific}</td></tr>`).join('');
+}
+
+// ---------- Chart 2B: grouped bar, -log10(median p) per arm ----------
+function renderChart2b() {
+  const files = {
+    'banksy_scvi': DATA.crossregion_banksy_scvi_pvalues,
+    'stagate_scvi': DATA.crossregion_stagate_scvi_pvalues,
+    'banksy_scgpt': DATA.crossregion_banksy_scgpt_pvalues,
+    'stagate_scgpt': DATA.crossregion_stagate_scgpt_pvalues,
+  };
+  function median(arr) {
+    const s = [...arr].sort((a, b) => a - b);
+    const mid = Math.floor(s.length / 2);
+    return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+  }
+  const stats = {};
+  Object.keys(files).forEach(k => {
+    const ps = files[k].map(r => +r.p_value);
+    stats[k] = median(ps);
+  });
+
+  const methods = ['banksy', 'stagate'];
+  const methodLabel = { banksy: 'Banksy', stagate: 'STAGATE' };
+  const anns = ['scvi', 'scgpt'];
+  const annLabel = { scvi: 'scVI', scgpt: 'scGPT' };
+  const colors = { scvi: 'var(--series-scvi)', scgpt: 'var(--series-scgpt)' };
+
+  const W = 500, H = 320, M = { t: 16, r: 16, b: 40, l: 48 };
+  const svg = svgEl('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}` });
+  const maxNeglog = 3.2;
+  const y = scaleLinear([0, maxNeglog], [H - M.b, M.t]);
+  niceTicks(maxNeglog, 0.5).forEach(t => {
+    svg.appendChild(svgEl('line', { class: 'grid-line', x1: M.l, x2: W - M.r, y1: y(t), y2: y(t) }));
+    const lab = svgEl('text', { class: 'tick-label', x: M.l - 8, y: y(t) + 4, 'text-anchor': 'end' });
+    lab.textContent = t.toFixed(1);
+    svg.appendChild(lab);
+  });
+  const thr = -Math.log10(0.05);
+  svg.appendChild(svgEl('line', { x1: M.l, x2: W - M.r, y1: y(thr), y2: y(thr), stroke: 'var(--text-muted)', 'stroke-width': 1, 'stroke-dasharray': '4 3' }));
+  const thrLab = svgEl('text', { class: 'tick-label', x: W - M.r, y: y(thr) - 5, 'text-anchor': 'end', 'font-size': 10 });
+  thrLab.textContent = 'p = 0.05';
+  svg.appendChild(thrLab);
+
+  svg.appendChild(svgEl('line', { class: 'axis-line', x1: M.l, x2: M.l, y1: M.t, y2: H - M.b }));
+  svg.appendChild(svgEl('line', { class: 'axis-line', x1: M.l, x2: W - M.r, y1: H - M.b, y2: H - M.b }));
+
+  const groupStep = (W - M.l - M.r) / methods.length;
+  const barW = groupStep * 0.28;
+  methods.forEach((m, gi) => {
+    const gx = M.l + groupStep * gi + groupStep / 2;
+    anns.forEach((a, ai) => {
+      const p = stats[`${m}_${a}`];
+      const neglog = Math.min(-Math.log10(Math.max(p, 1e-4)), maxNeglog);
+      const cx = gx + (ai - 0.5) * (barW + 6);
+      const y0 = y(0), y1 = y(neglog);
+      const rect = svgEl('rect', { x: cx - barW / 2, y: y1, width: barW, height: y0 - y1, fill: colors[a], class: 'interactive' });
+      rect.addEventListener('pointermove', (e) => {
+        showTooltip(e.clientX, e.clientY, `<div class="t-title">${methodLabel[m]} x ${annLabel[a]}</div>
+          <div class="t-row"><span class="key" style="background:${colors[a]}"></span><span class="name">Median p-value</span><span class="val">${p}</span></div>`);
+      });
+      rect.addEventListener('pointerleave', hideTooltip);
+      svg.appendChild(rect);
+      const lab = svgEl('text', { x: cx, y: y1 - 6, 'text-anchor': 'middle', 'font-size': 10 });
+      lab.textContent = `p=${p}`;
+      svg.appendChild(lab);
+    });
+    const glab = svgEl('text', { class: 'tick-label', x: gx, y: H - M.b + 18, 'text-anchor': 'middle' });
+    glab.textContent = methodLabel[m];
+    svg.appendChild(glab);
+  });
+
+  document.getElementById('chart2b').appendChild(svg);
+}
+
+// ---------- Chart 3A: per-domain composition-cosine, faceted, colored by significance ----------
+function renderChart3a() {
+  const combos = [['v1', 'banksy'], ['v1', 'stagate'], ['v2', 'banksy'], ['v2', 'stagate']];
+  const methodLabel = { banksy: 'Banksy', stagate: 'STAGATE' };
+  const container = document.getElementById('chart3a');
+  container.style.display = 'flex';
+  container.style.gap = '16px';
+  container.style.flexWrap = 'wrap';
+
+  combos.forEach(([region, method]) => {
+    const raw = DATA[`annaxis_${region}_${method}`];
+    const pvals = DATA[`annaxis_${region}_${method}_pvalues`];
+    const pmap = {};
+    pvals.forEach(p => pmap[p.domain] = { p: +p.p_value, nullMedian: +p.null_median });
+
+    const W = 250, H = 220, M = { t: 26, r: 10, b: 24, l: 34 };
+    const svg = svgEl('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}` });
+    const title = svgEl('text', { x: M.l, y: 16, 'font-size': 12, 'font-weight': 700, fill: 'var(--text-primary)' });
+    title.textContent = `${region.toUpperCase()} x ${methodLabel[method]}`;
+    svg.appendChild(title);
+
+    const n = raw.length;
+    const x = scaleLinear([0, n - 1], [M.l + 10, W - M.r - 10]);
+    const y = scaleLinear([0, 1.02], [H - M.b, M.t]);
+    [0, 0.5, 1].forEach(t => {
+      svg.appendChild(svgEl('line', { class: 'grid-line', x1: M.l, x2: W - M.r, y1: y(t), y2: y(t) }));
+      const lab = svgEl('text', { class: 'tick-label', x: M.l - 6, y: y(t) + 4, 'text-anchor': 'end', 'font-size': 9 });
+      lab.textContent = t.toFixed(1);
+      svg.appendChild(lab);
+    });
+    svg.appendChild(svgEl('line', { class: 'axis-line', x1: M.l, x2: M.l, y1: M.t, y2: H - M.b }));
+    svg.appendChild(svgEl('line', { class: 'axis-line', x1: M.l, x2: W - M.r, y1: H - M.b, y2: H - M.b }));
+
+    raw.forEach((d, i) => {
+      const cos = +d.composition_cosine;
+      const info = pmap[d.domain];
+      const sig = info.p < 0.05;
+      const color = sig ? 'var(--status-critical)' : 'var(--text-muted)';
+      const cx = x(i), cy = y(cos);
+      svg.appendChild(svgEl('line', { x1: cx, x2: cx, y1: y(0), y2: cy, stroke: color, 'stroke-width': 2 }));
+      // chance-level reference: this domain's null median from the permutation test
+      const ny = y(info.nullMedian);
+      svg.appendChild(svgEl('line', {
+        x1: cx - 7, x2: cx + 7, y1: ny, y2: ny,
+        stroke: 'var(--text-muted)', 'stroke-width': 1.5, 'stroke-dasharray': '3 2'
+      }));
+      const dot = svgEl('circle', { class: 'mark-dot interactive', cx, cy, r: 5, fill: color });
+      dot.addEventListener('pointermove', (e) => {
+        showTooltip(e.clientX, e.clientY, `<div class="t-title">${d.domain} — ${region.toUpperCase()} x ${methodLabel[method]}</div>
+          <div class="t-row"><span class="name">Composition cosine</span><span class="val">${cos.toFixed(3)}</span></div>
+          <div class="t-row"><span class="name">Chance level (null median)</span><span class="val">${info.nullMedian.toFixed(3)}</span></div>
+          <div class="t-row"><span class="name">Permutation p</span><span class="val">${info.p}</span></div>
+          <div class="t-row"><span class="name">Top shifts</span><span class="val" style="font-weight:400">${d.top_celltype_shifts}</span></div>`);
+      });
+      dot.addEventListener('pointerleave', hideTooltip);
+      svg.appendChild(dot);
+      const lab = svgEl('text', { class: 'tick-label', x: cx, y: H - M.b + 14, 'text-anchor': 'middle', 'font-size': 9 });
+      lab.textContent = d.domain;
+      svg.appendChild(lab);
+    });
+
+    const card = document.createElement('div');
+    card.appendChild(svg);
+    container.appendChild(card);
+  });
+
+  document.getElementById('legend3a').innerHTML = `
+    <span class="item"><span class="swatch dot" style="background:var(--status-critical)"></span>Significant divergence (p&lt;0.05)</span>
+    <span class="item"><span class="swatch dot" style="background:var(--text-muted)"></span>Not significant</span>
+    <span class="item"><span class="swatch" style="border-top:1.5px dashed var(--text-muted); background:none; height:0"></span>Chance level (null median, per domain)</span>`;
+
+  const tbl = document.getElementById('table3');
+  let rows = '<tr><th>Region</th><th>Method</th><th>Domain</th><th>Cosine</th><th>Chance level</th><th>p-value</th><th>Top shifts</th></tr>';
+  combos.forEach(([region, method]) => {
+    const raw = DATA[`annaxis_${region}_${method}`];
+    const pvals = DATA[`annaxis_${region}_${method}_pvalues`];
+    const pmap = {}; pvals.forEach(p => pmap[p.domain] = { p: p.p_value, nullMedian: +p.null_median });
+    raw.forEach(d => {
+      const info = pmap[d.domain];
+      rows += `<tr><td>${region.toUpperCase()}</td><td>${methodLabel[method]}</td><td>${d.domain}</td><td>${(+d.composition_cosine).toFixed(3)}</td><td>${info.nullMedian.toFixed(3)}</td><td>${info.p}</td><td>${d.top_celltype_shifts}</td></tr>`;
+    });
+  });
+  tbl.innerHTML = rows;
+}
+
+// ---------- Chart 3B: median cosine across k, hue=region, dash=method ----------
+function renderChart3b() {
+  const rows = DATA.annotation_axis_cosine_by_k;
+  const methodLabel = { banksy: 'Banksy', stagate: 'STAGATE' };
+  const colors = { v1: 'var(--series-v1)', v2: 'var(--series-v2)' };
+  const dash = { banksy: 'none', stagate: '6 4' };
+  const groups = {};
+  rows.forEach(r => {
+    const key = `${r.region}_${r.method}`;
+    (groups[key] = groups[key] || []).push({ k: +r.k, cos: +r.cosine_median });
+  });
+  Object.values(groups).forEach(g => g.sort((a, b) => a.k - b.k));
+
+  const W = 900, H = 260, M = { t: 16, r: 24, b: 32, l: 44 };
+  const svg = svgEl('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}` });
+  const ks = groups['v1_banksy'].map(d => d.k);
+  const x = scaleLinear([ks[0], ks[ks.length - 1]], [M.l, W - M.r]);
+  const y = scaleLinear([0, 1], [H - M.b, M.t]);
+  [0, 0.2, 0.4, 0.6, 0.8, 1.0].forEach(t => {
+    svg.appendChild(svgEl('line', { class: 'grid-line', x1: M.l, x2: W - M.r, y1: y(t), y2: y(t) }));
+    const lab = svgEl('text', { class: 'tick-label', x: M.l - 8, y: y(t) + 4, 'text-anchor': 'end' });
+    lab.textContent = t.toFixed(1);
+    svg.appendChild(lab);
+  });
+  ks.forEach(k => {
+    const lab = svgEl('text', { class: 'tick-label', x: x(k), y: H - M.b + 18, 'text-anchor': 'middle' });
+    lab.textContent = k;
+    svg.appendChild(lab);
+  });
+  svg.appendChild(svgEl('line', { class: 'axis-line', x1: M.l, x2: M.l, y1: M.t, y2: H - M.b }));
+  svg.appendChild(svgEl('line', { class: 'axis-line', x1: M.l, x2: W - M.r, y1: H - M.b, y2: H - M.b }));
+
+  const crosshair = svgEl('line', { class: 'crosshair', y1: M.t, y2: H - M.b });
+  svg.appendChild(crosshair);
+
+  ['v1', 'v2'].forEach(region => ['banksy', 'stagate'].forEach(method => {
+    const key = `${region}_${method}`;
+    const pts = groups[key];
+    const d = pts.map((pt, i) => `${i === 0 ? 'M' : 'L'}${x(pt.k)},${y(pt.cos)}`).join(' ');
+    svg.appendChild(svgEl('path', {
+      d, fill: 'none', stroke: colors[region], 'stroke-width': 2,
+      'stroke-dasharray': dash[method], 'stroke-linecap': 'round'
+    }));
+    pts.forEach(pt => svg.appendChild(svgEl('circle', { class: 'mark-dot', cx: x(pt.k), cy: y(pt.cos), r: 3.5, fill: colors[region] })));
+  }));
+
+  const hit = svgEl('rect', { class: 'hit', x: M.l, y: M.t, width: W - M.l - M.r, height: H - M.t - M.b });
+  hit.addEventListener('pointermove', (e) => {
+    const rect = svg.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / rect.width * W;
+    const kApprox = ks.reduce((best, k) => Math.abs(x(k) - mx) < Math.abs(x(best) - mx) ? k : best, ks[0]);
+    crosshair.setAttribute('x1', x(kApprox)); crosshair.setAttribute('x2', x(kApprox));
+    crosshair.style.display = 'block';
+    let html = `<div class="t-title">k = ${kApprox}</div>`;
+    ['v1', 'v2'].forEach(region => ['banksy', 'stagate'].forEach(method => {
+      const pt = groups[`${region}_${method}`].find(p => p.k === kApprox);
+      html += `<div class="t-row"><span class="key" style="background:${colors[region]}"></span><span class="name">${region.toUpperCase()} x ${methodLabel[method]}</span><span class="val">${pt.cos.toFixed(3)}</span></div>`;
+    }));
+    showTooltip(e.clientX, e.clientY, html);
+  });
+  hit.addEventListener('pointerleave', () => { hideTooltip(); crosshair.style.display = 'none'; });
+  svg.appendChild(hit);
+
+  document.getElementById('chart3b').appendChild(svg);
+  document.getElementById('legend3b').innerHTML = `
+    <span class="item"><span class="swatch" style="background:var(--series-v1)"></span>V1</span>
+    <span class="item"><span class="swatch" style="background:var(--series-v2)"></span>V2</span>
+    <span class="item"><span class="swatch" style="border-top:2px solid var(--text-secondary)"></span>Banksy</span>
+    <span class="item"><span class="swatch dash" style="color:var(--text-secondary)"></span>STAGATE</span>`;
+}
+
+// ---------- wire-up ----------
+renderChart1();
+renderChart2a();
+renderChart2b();
+renderChart3a();
+renderChart3b();
+
+document.querySelectorAll('.table-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tbl = document.getElementById(btn.dataset.target);
+    tbl.classList.toggle('show');
+    btn.textContent = tbl.classList.contains('show') ? 'Hide table' : 'Table view';
+  });
+});
+
+const themeToggle = document.getElementById('themeToggle');
+themeToggle.addEventListener('click', () => {
+  const root = document.documentElement;
+  const current = root.getAttribute('data-theme');
+  root.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+banksy,stagate_best,jaccard,robust
+d0,d4,0.419,True
+d1,d3,0.697,True
+d2,d5,0.611,True
+d3,d1,0.676,True
+d4,d1,0.105,False
+d5,d6,0.579,True
+d6,d2,0.347,True
+d7,d7,0.449,True

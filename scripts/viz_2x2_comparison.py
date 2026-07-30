@@ -199,11 +199,14 @@ def fig3_annotation_axis(ndir: Path, perm_dir: Path, outdir: Path, k=8):
         ax = fig.add_subplot(gs[0, i])
         raw = pd.read_csv(ndir / f"{region}_{method}_annaxis_scvi_vs_scgpt.csv")
         pvals = pd.read_csv(perm_dir / f"{region}_{method}_annaxis_scvi_vs_scgpt_k8_pvalues.csv")
-        merged = raw.merge(pvals[["domain", "p_value"]], on="domain")
+        merged = raw.merge(pvals[["domain", "p_value", "null_median"]], on="domain")
         sig = merged["p_value"] < 0.05
         colors = np.where(sig, C_CRITICAL, INK_MUTED)
         x = np.arange(len(merged))
         ax.vlines(x, 0, merged["composition_cosine"], color=colors, linewidth=2)
+        # chance-level reference: per-domain null median from the permutation test
+        ax.hlines(merged["null_median"], x - 0.22, x + 0.22, color=INK_MUTED,
+                  linewidth=1.5, linestyle=(0, (3, 2)), zorder=2)
         ax.scatter(x, merged["composition_cosine"], color=colors, s=48,
                    edgecolor=SURFACE, linewidth=1.5, zorder=3)
         for xi, row in zip(x, merged.itertuples()):
@@ -226,8 +229,10 @@ def fig3_annotation_axis(ndir: Path, perm_dir: Path, outdir: Path, k=8):
                markeredgecolor=SURFACE, markersize=8, label="Significant divergence (p<0.05)"),
         Line2D([0], [0], marker="o", color="none", markerfacecolor=INK_MUTED,
                markeredgecolor=SURFACE, markersize=8, label="Not significant"),
+        Line2D([0], [0], color=INK_MUTED, linewidth=1.5, linestyle=(0, (3, 2)),
+               label="Chance level (null median, per domain)"),
     ]
-    fig.legend(handles=legend_handles, loc="upper center", ncol=2, frameon=False,
+    fig.legend(handles=legend_handles, loc="upper center", ncol=3, frameon=False,
                bbox_to_anchor=(0.5, 0.985), fontsize=9)
 
     # Panel B: median cosine trend across k, hue=region, linestyle=method

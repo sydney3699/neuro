@@ -1,0 +1,9 @@
+v1_niche,v2_niche,cosine,matched
+d0,d1,0.651,True
+d1,d7,0.928,True
+d2,d3,0.975,True
+d3,d6,0.727,True
+d4,d0,0.977,True
+d5,d4,0.967,True
+d6,d5,0.967,True
+d7,d6,0.567,False
