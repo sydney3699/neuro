@@ -3,8 +3,11 @@
 **Title:** Spatially-resolved cell-cell communication and the V1/V2 boundary in the developing human cortex: a multi-method comparative analysis
 
 **Author:** Sydney Cole
+
 **Started:** 2026-05-21
+
 **Target completion:** 
+
 **Last updated:** 2026-08-03
 
 ---
