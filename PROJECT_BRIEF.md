@@ -233,7 +233,7 @@ These are practical questions that should be settled in week 1 or early week 2:
 
 **Core:** Python 3.11, Scanpy, AnnData, Squidpy, scVI-tools, scenvi
 
-**Foundation models:** scGPT zero-shot (instead of UCE via CELLxGENE Census)
+**Foundation models:** scGPT (zero-shot; instead of UCE via CELLxGENE Census)
 
 **Spatial methods:** Banksy (standard), STAGATE (GNN primary), GraphST (GNN fallback)
 
