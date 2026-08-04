@@ -182,7 +182,8 @@ To prevent scope creep, the following are explicitly **out of scope**:
 ### Week 6 — Writeup, figures, repo polish
 - [ ] Draft 2,500–4,000-word writeup (blog post or short preprint format)
 - [ ] Finalize 4–6 publication-quality figures
-- [ ] Clean GitHub repo: README, environment.yml, download script, notebooks numbered by analysis stage
+- [ ] Clean GitHub repo: README (with DAG), environment.yml, download script
+- [ ] Productionize: Nextflow, Docker, tests
 - [ ] Optional: bioRxiv preprint if results warrant
 
 **Deliverable:** Public repo + writeup; "elevator paragraph" version for applications
@@ -230,14 +231,19 @@ These are practical questions that should be settled in week 1 or early week 2:
 
 ## Tools and environment
 
-**Core:** Python 3.11, Scanpy, AnnData, Squidpy, scVI-tools
-**Foundation models:** UCE via CELLxGENE Census, or scGPT (zero-shot)
-**Spatial methods:** Banksy (standard), STAGATE (GNN primary), GraphST (GNN fallback)
-**CCC:** COMMOT (spatial), CellChat (non-spatial context)
-**R interop (for .rds files):** zellkonverter or anndata2ri
-**Other:** matplotlib, seaborn for plotting; pandas/numpy for data wrangling
+**Core:** Python 3.11, Scanpy, AnnData, Squidpy, scVI-tools, scenvi
 
-Environment pinned in `environment.yml` (committed to repo).
+**Foundation models:** scGPT zero-shot (instead of UCE via CELLxGENE Census)
+
+**Spatial methods:** Banksy (standard), STAGATE (GNN primary), GraphST (GNN fallback)
+
+**CCC:** COMMOT (spatial), CellChat (non-spatial context)
+
+**R interop (for .rds files):** zellkonverter or anndata2ri
+
+**Other:** Scipy, scikit-learn for stats/ML; matplotlib, seaborn for plotting; pandas, numpy for data wrangling
+
+Environment pinned in `environment.yml`.
 
 ---
 
