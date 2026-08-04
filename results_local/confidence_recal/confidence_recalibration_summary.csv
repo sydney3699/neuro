@@ -1,0 +1,14 @@
+run,n_clusters,old_flagged,old_rate,new_flagged,new_rate,margin_p_thr,n_full_consensus
+annot_scgpt/FB080_scgpt_cluster_map,14,11,0.786,4,0.286,0.0059,5
+annot_scgpt_coarse/FB080_scgpt_cluster_map,15,10,0.667,3,0.2,0.021,10
+annot_scgpt_resgrid_R1.2/FB080_scgpt_cluster_map,16,11,0.688,3,0.188,0.0106,8
+annot_scgpt_resgrid_R1.4/FB080_scgpt_cluster_map,17,14,0.824,3,0.176,0.0065,6
+annot_scgpt_resgrid_R1.6/FB080_scgpt_cluster_map,19,16,0.842,4,0.211,0.0068,5
+annot_scgpt_resgrid_R1.8/FB080_scgpt_cluster_map,22,17,0.773,4,0.182,0.0067,8
+annot_scgpt_resgrid_R2.0/FB080_scgpt_cluster_map,25,19,0.76,5,0.2,0.0066,8
+annot_scgpt_resgrid_R2.5/FB080_scgpt_cluster_map,30,23,0.767,6,0.2,0.0091,9
+annot_scgpt_resgrid_R3.0/FB080_scgpt_cluster_map,34,24,0.706,8,0.235,0.0067,12
+annot_scgpt_resgrid_R3.5/FB080_scgpt_cluster_map,36,26,0.722,9,0.25,0.0058,11
+annot_scgpt_resgrid_R4.0/FB080_scgpt_cluster_map,42,30,0.714,11,0.262,0.0051,14
+annot_scvi/FB080_scvi_cluster_map,37,31,0.838,8,0.216,0.0073,19
+annot_scvi_coarse/FB080_scvi_cluster_map,37,22,0.595,6,0.162,0.026,30

@@ -57,6 +57,38 @@ def compute_embedding(adata, backend, n_latent, scvi_epochs, seed, log):
     raise SystemExit(f"unknown embedding backend {backend}")
 
 
+def compute_low_confidence(best_corr, margin, consensus, *, min_corr=0.3,
+                           margin_percentile=25.0, min_margin_floor=None):
+    """Adaptive low-confidence flag for cluster->reference-type assignments.
+
+    A cluster is flagged when ANY of:
+      - best_corr < min_corr : the cluster matches no reference type well
+        (absolute floor -- a genuine "nothing fits" catch).
+      - margin at/below the within-run `margin_percentile` AND metric_consensus < 3 :
+        the top-two reference types are near-tied *for this run* AND the three
+        metrics (Pearson/Spearman/cosine) don't all agree on the pick.
+      - min_margin_floor is not None and margin < min_margin_floor : optional
+        absolute margin floor (disabled by default; the old fixed-0.05 behavior).
+
+    The consensus gate is the key change from the old `margin < 0.05` rule: a small
+    best-vs-second margin no longer flags a cluster on its own when Pearson, Spearman
+    and cosine still agree on the same label. Percentile makes the margin cut adapt
+    to each run's own margin distribution instead of a fixed constant that over-flags
+    (the old rule flagged 59-84% of clusters, driven entirely by margin<0.05).
+    """
+    import numpy as np
+    best_corr = np.asarray(best_corr, dtype=float)
+    margin = np.asarray(margin, dtype=float)
+    consensus = np.asarray(consensus, dtype=int)
+    low = best_corr < min_corr
+    if margin.size:
+        thr = np.percentile(margin, margin_percentile)
+        low = low | ((margin <= thr) & (consensus < 3))
+    if min_margin_floor is not None:
+        low = low | (margin < min_margin_floor)
+    return low
+
+
 def main():
     p = argparse.ArgumentParser(description="Embed -> Leiden -> reference-centroid annotation")
     p.add_argument("--spatial-h5ad", default="/scratch/cole.sy/neuro/results/envi_FB080_lr/FB080_spatial_envi.h5ad")
@@ -72,10 +104,13 @@ def main():
     p.add_argument("--scvi-epochs", type=int, default=200)
     p.add_argument("--n-neighbors", type=int, default=15)
     p.add_argument("--seed", type=int, default=0, help="reproducibility seed (scvi/leiden/kmeans)")
-    p.add_argument("--min-corr", type=float, default=0.5,
-                   help="flag a cluster low_confidence if its best reference correlation is below this")
-    p.add_argument("--min-margin", type=float, default=0.05,
-                   help="flag a cluster low_confidence if best-minus-second-best correlation is below this")
+    p.add_argument("--min-corr", type=float, default=0.3,
+                   help="absolute floor: flag a cluster low_confidence if its best reference correlation is below this")
+    p.add_argument("--margin-percentile", type=float, default=25.0,
+                   help="flag a cluster if its best-minus-second-best margin is at/below this within-run "
+                        "percentile AND the 3 metrics (Pearson/Spearman/cosine) don't all agree on the pick")
+    p.add_argument("--min-margin", type=float, default=None,
+                   help="optional absolute margin floor (old fixed-0.05 behavior); disabled by default")
     p.add_argument("--unassign", action="store_true",
                    help="set low_confidence clusters to 'unassigned' rather than only flagging them")
     p.add_argument("--tag", default="FB080", help="output filename tag")
@@ -175,7 +210,10 @@ def main():
     best_corr = pear[ridx, best]
     margin = best_corr - pear[ridx, second]
     consensus = 1 + (spear.argmax(1) == best).astype(int) + (cos.argmax(1) == best).astype(int)
-    low_conf = (best_corr < args.min_corr) | (margin < args.min_margin)
+    low_conf = compute_low_confidence(best_corr, margin, consensus,
+                                      min_corr=args.min_corr,
+                                      margin_percentile=args.margin_percentile,
+                                      min_margin_floor=args.min_margin)
     labels = ref_cent.index.to_numpy()[best].astype(object)
     if args.unassign:
         labels[low_conf] = "unassigned"
@@ -192,7 +230,9 @@ def main():
         "low_confidence": low_conf,
     }).set_index("leiden")
     nlc = int(low_conf.sum())
-    log(f"  cluster->ref: {nlc}/{nC} low-confidence (corr<{args.min_corr} or margin<{args.min_margin}); "
+    log(f"  cluster->ref: {nlc}/{nC} low-confidence "
+        f"(corr<{args.min_corr}, or margin<=p{args.margin_percentile:g} AND consensus<3"
+        f"{'' if args.min_margin is None else f', or margin<{args.min_margin}'}); "
         f"full 3-metric consensus on {int((consensus == 3).sum())}/{nC}")
     cluster_map.to_csv(outdir / f"{args.tag}_{emb_label}_cluster_map.csv")
 
