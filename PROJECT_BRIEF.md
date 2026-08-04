@@ -3,9 +3,9 @@
 **Title:** Spatially-resolved cell-cell communication and the V1/V2 boundary in the developing human cortex: a multi-method comparative analysis
 
 **Author:** Sydney Cole
-**Started:** 
+**Started:** 2026-05-21
 **Target completion:** 
-**Last updated:** 
+**Last updated:** 2026-08-03
 
 ---
 
@@ -21,7 +21,9 @@ This project analyzes spatially-resolved cell-cell communication (CCC) at the V1
 
 **Why this matters:** The Qian/Walsh paper established that the V1/V2 boundary is molecularly sharp at GW20, well before cytoarchitectural differentiation. The paper proposes that synaptogenesis in V1-specific L4 neurons contributes to this boundary but does not identify the broader signaling environment that supports area-specific molecular identity. Spatial CCC analysis can address this gap by identifying ligand-receptor interactions enriched in V1 versus V2 cortical plate, contributing to mechanistic understanding of how a discrete molecular boundary is established and maintained in tissue otherwise governed by gradient-like specification.
 
-**Secondary angle (discussion only):** Within EN-ET cells in the cortical plate at GW20, do the three subplate (SP) populations (EN-ET-SP, EN-ET-SP-P, EN-ET-SP-early) differ in their local signaling environments between V1 and V2? Brief observation, not a parallel analytical thread.
+**Secondary:** Within EN-ET cells in the cortical plate at GW20, do the three subplate (SP) populations (EN-ET-SP, EN-ET-SP-P, EN-ET-SP-early) differ in their local signaling environments between V1 and V2? 
+
+**Extension after initial results:** Using best-performing pipeline, do the same GW20 V1-vs-V2 niches persist at GW34?
 
 ---
 
@@ -130,55 +132,55 @@ To prevent scope creep, the following are explicitly **out of scope**:
 - [x] Download MERFISH data from Zenodo
 - [x] Verify file structure and annotation taxonomy
 - [x] Identify V1/V2 analytical population
-- [ ] Apply UL/DL harmonization function to master file
-- [ ] Visualize V1/V2 boundary at GW20 (sanity check)
-- [ ] Set up environment with all required tools (scVI, Squidpy, COMMOT)
-- [ ] Test STAGATE installation; verify GPU access if available
-- [ ] Lock project brief (this document)
+- [x] Apply UL/DL harmonization function to master file
+- [x] Visualize V1/V2 boundary at GW20 (sanity check)
+- [x] Set up environment with all required tools (scVI, Squidpy, COMMOT)
+- [x] Test STAGATE installation; verify GPU access if available
+- [x] Lock project brief (this document)
 
 **Deliverable:** Locked brief; clean data loading notebook; one verification figure (V1/V2 boundary visualization at GW20)
 
 ### Week 2 — Standard pipeline baseline
-- Annotate paired snRNA-seq with standard scVI + Leiden
-- Transfer annotations to MERFISH V1/V2 cells at GW20
-- Run Banksy spatial domain identification
-- Validate against paper's area labels
-- Run baseline COMMOT analysis (V1 vs V2)
-- Identify baseline V1-vs-V2 differential CCC niches
+- [x] Annotate paired snRNA-seq with standard scVI + Leiden
+- [x] Transfer annotations to MERFISH V1/V2 cells at GW20
+- [x] Run Banksy spatial domain identification
+- [x] Validate against paper's area labels
+- [x] Run baseline COMMOT analysis (V1 vs V2)
+- [x] Identify baseline V1-vs-V2 differential CCC niches
 
 **Deliverable:** Baseline pipeline complete; first list of V1/V2 differential niches; one summary figure
 
 ### Week 3 — Foundation model and GNN pipelines
-- Pull UCE embeddings (or run scGPT inference) on paired snRNA-seq
-- Compare FM annotations to standard annotations (where do they differ?)
-- Transfer FM annotations to MERFISH cells
-- Run STAGATE on MERFISH V1/V2 sections
-- Evaluate spatial domain agreement with `area` labels for both Banksy and STAGATE
+- [x] Pull UCE embeddings (or run scGPT inference) on paired snRNA-seq
+- [x] Compare FM annotations to standard annotations (where do they differ?)
+- [x] Transfer FM annotations to MERFISH cells
+- [x] Run STAGATE on MERFISH V1/V2 sections
+- [x] Evaluate spatial domain agreement with `area` labels for both Banksy and STAGATE
 
 **Deliverable:** FM and GNN pipeline outputs ready for comparison
 
 ### Week 4 — Full 2x2 comparison and biological interpretation
-- Run COMMOT on all four pipelines
-- Identify robust vs. method-dependent V1-vs-V2 CCC niches
-- Biological interpretation: connect findings to known signaling pathways (Wnt, Notch, FGF, EphrinB)
-- Visium validation: confirm key L-R pairs in whole-transcriptome data
-- Decision point: is GW34 extension on track?
+- [x] Run COMMOT on all four pipelines
+- [x] Identify robust vs. method-dependent V1-vs-V2 CCC niches
+- [ ] Biological interpretation: connect findings to known signaling pathways (Wnt, Notch, FGF, EphrinB)
+- [ ] Visium validation: confirm key L-R pairs in whole-transcriptome data
+- [x] Decision point: is GW34 extension on track?
 
 **Deliverable:** Complete GW20 analysis; first draft of main figures; decision on GW34 extension
 
 ### Week 5 — GW34 extension (if on track) and SP angle
-- Apply harmonization to per-region BA17 file
-- Run best-performing pipeline (from week 4 results) on GW34 V1/V2 data
-- Ask: do GW20 V1-vs-V2 niches persist at GW34?
-- Brief SP subtype observation within V1/V2 EN-ET cells at GW20
+- [ ] Apply harmonization to per-region BA17 file
+- [ ] Run best-performing pipeline (from week 4 results) on GW34 V1/V2 data
+- [ ] Ask: do GW20 V1-vs-V2 niches persist at GW34?
+- [ ] Brief SP subtype observation within V1/V2 EN-ET cells at GW20
 
 **Deliverable:** GW34 comparison results; SP discussion paragraph drafted
 
 ### Week 6 — Writeup, figures, repo polish
-- Draft 2,500–4,000-word writeup (blog post or short preprint format)
-- Finalize 4–6 publication-quality figures
-- Clean GitHub repo: README, environment.yml, download script, notebooks numbered by analysis stage
-- Optional: bioRxiv preprint if results warrant
+- [ ] Draft 2,500–4,000-word writeup (blog post or short preprint format)
+- [ ] Finalize 4–6 publication-quality figures
+- [ ] Clean GitHub repo: README, environment.yml, download script, notebooks numbered by analysis stage
+- [ ] Optional: bioRxiv preprint if results warrant
 
 **Deliverable:** Public repo + writeup; "elevator paragraph" version for applications
 
@@ -266,10 +268,3 @@ Record significant decisions and pivots as the project evolves. Date each entry.
 - *2026-07-26* — Added static-figure and interactive-dashboard visualizations of the 2x2 comparison outputs: cross-method domain agreement across k, cross-region matching and significance by arm, and the Q1 annotation-axis composition-cosine story (including a per-domain "chance level" reference line from the permutation null, added to make clear why moderate cosine values can still register as statistically significant in some regions/domains but not others).
 
 ---
-
-## Notes on use of this brief
-
-- Update the "Last updated" date and the week-by-week plan as you progress
-- When a kill criterion triggers, note it in the decision log and update scope accordingly
-- The "Open questions to resolve early" section should empty out by end of week 1
-- The success criteria are intentionally generous — meeting them gives you a defensible portfolio piece even if specific biological findings are inconclusive
