@@ -1,0 +1,17 @@
+region,gw34_domain,gw20_best_match,cosine,matched
+v1,d0,d7,0.968,True
+v1,d1,d1,0.31,False
+v1,d2,d1,0.351,False
+v1,d3,d4,0.948,True
+v1,d4,d1,0.662,True
+v1,d5,d2,0.952,False
+v1,d6,d3,0.903,False
+v1,d7,d2,0.968,True
+v2,d0,d3,0.936,False
+v2,d1,d7,0.431,False
+v2,d2,d6,0.841,False
+v2,d3,d3,0.938,True
+v2,d4,d0,0.811,True
+v2,d5,d6,0.929,True
+v2,d6,d7,0.664,True
+v2,d7,d3,0.886,False
