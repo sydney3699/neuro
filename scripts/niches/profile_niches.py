@@ -28,30 +28,11 @@ import argparse
 import time
 from pathlib import Path
 
+from neurospatial.signaling import select_signaling_cols
+
 
 def log(msg):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
-
-
-def select_signaling_cols(cols, level, pathway_names, pair_suffixes):
-    """Split merged commot sum columns by level. `cols` are e.g. 's-WNT',
-    's-TGFB1-TGFBR1_TGFBR2', 's-MHC-I', 's-total-total' (and 'r-' equivalents).
-    Classify against the actual CellChatDB pathway/pair names -- NOT a hyphen
-    count -- because some pathways (MHC-I, MHC-II, ...) contain hyphens."""
-    out = []
-    for c in map(str, cols):
-        if c.endswith("-total-total"):
-            continue  # grand total; recomputed downstream if needed
-        suffix = c[2:] if (c.startswith("s-") or c.startswith("r-")) else c
-        if suffix in pathway_names:
-            is_pathway = True
-        elif suffix in pair_suffixes:
-            is_pathway = False
-        else:
-            is_pathway = "-" not in suffix   # fallback for anything unexpected
-        if level == "all" or (level == "pathway" and is_pathway) or (level == "pair" and not is_pathway):
-            out.append(c)
-    return out
 
 
 def main():

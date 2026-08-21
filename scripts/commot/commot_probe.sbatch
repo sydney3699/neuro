@@ -36,7 +36,7 @@ mkdir -p /scratch/cole.sy/neuro/logs "$OUTDIR"
 
 echo "Host: $(hostname)  Region: ${REGION}  Probe chunk: 0/${PROBE_N}  nitermax: ${COT_NITERMAX}  outdir: ${OUTDIR}  Start: $(date)"
 
-conda run --no-capture-output -n neuro python -u /home/cole.sy/neuro/scripts/run_commot.py \
+conda run --no-capture-output -n neuro python -u /home/cole.sy/neuro/scripts/commot/run_commot.py \
     --region "$REGION" \
     --pair-chunk "0/${PROBE_N}" \
     --cot-nitermax "$COT_NITERMAX" \

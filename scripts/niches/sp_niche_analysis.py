@@ -23,29 +23,11 @@ import argparse
 import time
 from pathlib import Path
 
+from neurospatial.signaling import select_signaling_cols
+
 
 def log(msg):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
-
-
-def select_signaling_cols(cols, level, pathway_names, pair_suffixes):
-    """Identical logic to profile_niches.py: classify merged commot sum
-    columns (e.g. 's-WNT', 's-TGFB1-TGFBR1_TGFBR2', 's-total-total') by
-    level against the actual CellChatDB pathway/pair names."""
-    out = []
-    for c in map(str, cols):
-        if c.endswith("-total-total"):
-            continue
-        suffix = c[2:] if (c.startswith("s-") or c.startswith("r-")) else c
-        if suffix in pathway_names:
-            is_pathway = True
-        elif suffix in pair_suffixes:
-            is_pathway = False
-        else:
-            is_pathway = "-" not in suffix
-        if level == "all" or (level == "pathway" and is_pathway) or (level == "pair" and not is_pathway):
-            out.append(c)
-    return out
 
 
 def main():

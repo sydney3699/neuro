@@ -47,7 +47,7 @@ PAIR_BATCH="${PAIR_BATCH:-4}"    # pairs processed at once; caps peak memory (se
 
 echo "Host: $(hostname)  Region: ${REGION}  Chunk: ${SLURM_ARRAY_TASK_ID}/${NCHUNK}  nitermax: ${COT_NITERMAX}  pair_batch: ${PAIR_BATCH}  Start: $(date)"
 
-conda run --no-capture-output -n neuro python -u /home/cole.sy/neuro/scripts/run_commot.py \
+conda run --no-capture-output -n neuro python -u /home/cole.sy/neuro/scripts/commot/run_commot.py \
     --region "$REGION" \
     --pair-chunk "${SLURM_ARRAY_TASK_ID}/${NCHUNK}" \
     --pair-batch "$PAIR_BATCH" \

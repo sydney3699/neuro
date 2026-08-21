@@ -23,7 +23,7 @@ REGION="${REGION:-v1}"
 
 echo "Host: $(hostname)  Region: ${REGION}  Start: $(date)"
 
-conda run --no-capture-output -n neuro python -u /home/cole.sy/neuro/scripts/merge_commot.py \
+conda run --no-capture-output -n neuro python -u /home/cole.sy/neuro/scripts/commot/merge_commot.py \
     --region "$REGION" \
     --chunk-dir /scratch/cole.sy/neuro/results/commot \
     --outdir    /scratch/cole.sy/neuro/results/commot

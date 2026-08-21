@@ -15,16 +15,12 @@ Runs in the neuro env (pandas/numpy only). Import-safe: annotate_cells' heavy de
 (scanpy/scvi) are all lazy, so importing compute_low_confidence is cheap.
 """
 import argparse
-import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-# annotate_cells.py sits alongside this script (both in the flat scratch dir on
-# Explorer, and in scripts/ in the repo). Make sure its dir is importable.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from annotate_cells import compute_low_confidence
+from neurospatial.confidence import compute_low_confidence
 
 
 def main():

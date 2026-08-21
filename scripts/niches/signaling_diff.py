@@ -24,39 +24,23 @@ Sign convention: diff = v1_mean - v2_mean (positive = higher in V1), matching
 sp_niche_analysis.py. rank_biserial > 0 likewise means V1 tends to exceed V2.
 
 Runs in the neuro env (needs commot for CellChatDB pathway classification, + scipy).
-Reuses select_signaling_cols from sp_niche_analysis.py.
+Reuses select_signaling_cols + bh_fdr from the neurospatial package.
 """
 import argparse
-import sys
 import time
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from sp_niche_analysis import select_signaling_cols
+from neurospatial.signaling import select_signaling_cols, bh_fdr
 
 
 def log(msg):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
 
 
-def bh_fdr(pvals):
-    """Benjamini-Hochberg FDR. Returns q-values aligned to input order."""
-    import numpy as np
-    p = np.asarray(pvals, dtype=float)
-    n = p.size
-    if n == 0:
-        return p
-    order = np.argsort(p)
-    ranked = p[order] * n / (np.arange(n) + 1)
-    q_sorted = np.minimum.accumulate(ranked[::-1])[::-1]
-    q = np.empty(n)
-    q[order] = np.clip(q_sorted, 0, 1)
-    return q
-
-
 def main():
     p = argparse.ArgumentParser(description="Reproducible V1-vs-V2 per-pathway signaling diff + significance")
     p.add_argument("--results", default="/scratch/cole.sy/neuro/results")
+    p.add_argument("--commot-dir", default="", help="dir holding commot_{region}.h5ad; default {results}/commot")
     p.add_argument("--regions", default="v1,v2", help="exactly two: region0,region1 (diff = r0_mean - r1_mean)")
     p.add_argument("--level", default="pathway", choices=["pathway", "pair", "all"])
     p.add_argument("--species", default="human")
@@ -73,6 +57,7 @@ def main():
     from scipy.stats import mannwhitneyu
 
     results = Path(args.results)
+    commot_dir = Path(args.commot_dir) if args.commot_dir else results / "commot"
     outdir = Path(args.outdir); outdir.mkdir(parents=True, exist_ok=True)
     regions = args.regions.split(",")
     assert len(regions) == 2, "need exactly two regions"
@@ -86,7 +71,7 @@ def main():
     region_sig = {}   # region -> DataFrame (cells x signaling cols)
     region_masks = {}  # region -> {"cpmz": all-True, "sp": layer==sp}
     for region in regions:
-        h5ad_path = results / "commot" / f"commot_{region}.h5ad"
+        h5ad_path = commot_dir / f"commot_{region}.h5ad"
         log(f"Loading {h5ad_path}")
         a = ad.read_h5ad(h5ad_path)
         layer = a.obs[args.layer_key].astype(str).values
@@ -116,6 +101,10 @@ def main():
         X0 = region_sig[r0].loc[:, common_cols].values[m0]   # (n0 x P)
         X1 = region_sig[r1].loc[:, common_cols].values[m1]   # (n1 x P)
         n0, n1 = X0.shape[0], X1.shape[0]
+        if n0 == 0 or n1 == 0:
+            log(f"[{pop}] SKIP: {r0} n={n0}, {r1} n={n1} (population empty in a region — "
+                f"e.g. no subplate cells at GW34)")
+            continue
         log(f"[{pop}] {r0} n={n0}  {r1} n={n1}  over {len(common_cols)} pathways")
         rows = []
         for j, col in enumerate(common_cols):

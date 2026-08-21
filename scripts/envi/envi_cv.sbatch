@@ -12,7 +12,7 @@
 # 5-fold leave-genes-out CV of the ENVI imputation: each array task retrains
 # ENVI with one fold of shared panel genes withheld from the spatial side and
 # scores imputed-vs-measured for those genes. Aggregate afterwards with:
-#   conda run -n neuro python scripts/aggregate_cv.py
+#   conda run -n neuro python scripts/envi/aggregate_cv.py
 
 set -euo pipefail
 mkdir -p /scratch/cole.sy/neuro/logs /scratch/cole.sy/neuro/results/envi_cv
@@ -23,7 +23,7 @@ nvidia-smi || true
 TRAINING_STEPS="${TRAINING_STEPS:-10000}"
 NUM_HVG="${NUM_HVG:-2048}"
 
-conda run --no-capture-output -n neuro python -u /home/cole.sy/neuro/scripts/run_envi_cv.py \
+conda run --no-capture-output -n neuro python -u /home/cole.sy/neuro/scripts/envi/run_envi_cv.py \
     --fold "${SLURM_ARRAY_TASK_ID}" \
     --n-folds 5 \
     --spatial /scratch/cole.sy/neuro/data/processed/FB080_O1b_v1v2_envi_input.h5ad \

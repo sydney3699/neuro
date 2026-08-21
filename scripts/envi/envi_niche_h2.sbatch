@@ -10,7 +10,7 @@
 set -euo pipefail
 mkdir -p /scratch/cole.sy/neuro/logs /scratch/cole.sy/neuro/results
 echo "Host: $(hostname)   Start: $(date)"; nvidia-smi || true
-conda run --no-capture-output -n neuro python -u /home/cole.sy/neuro/scripts/run_envi.py \
+conda run --no-capture-output -n neuro python -u /home/cole.sy/neuro/scripts/envi/run_envi.py \
     --spatial /scratch/cole.sy/neuro/data/processed/FB080_O1b_v1v2_envi_input.h5ad \
     --snrna   /scratch/cole.sy/neuro/data/raw/snrna.h5ad \
     --outdir  /scratch/cole.sy/neuro/results/envi_FB080_niche_H2 \

@@ -27,7 +27,7 @@ OUTDIR="${OUTDIR:-/scratch/cole.sy/neuro/results/envi_FB080_lr}"
 CELLTYPE_KEY="${CELLTYPE_KEY:-H2_annotation}"
 echo "TRAINING_STEPS=$TRAINING_STEPS  NUM_HVG=$NUM_HVG  LR_DATABASE=$LR_DATABASE  OUTDIR=$OUTDIR  CELLTYPE_KEY=$CELLTYPE_KEY"
 
-conda run --no-capture-output -n neuro python -u /home/cole.sy/neuro/scripts/run_envi.py \
+conda run --no-capture-output -n neuro python -u /home/cole.sy/neuro/scripts/envi/run_envi.py \
     --spatial /scratch/cole.sy/neuro/data/processed/FB080_O1b_v1v2_envi_input.h5ad \
     --snrna   /scratch/cole.sy/neuro/data/raw/snrna.h5ad \
     --outdir  "$OUTDIR" \
