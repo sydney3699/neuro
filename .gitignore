@@ -250,3 +250,7 @@ data/
 # Project scratch
 scratch/
 tmp/
+work/
+.nextflow/
+.nextflow.log*
+results/
