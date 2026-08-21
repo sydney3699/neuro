@@ -1,0 +1,33 @@
+# scGPT zero-shot embedding stage (GPU) — torch cu121, py3.10
+# Build context = repo root:  docker build -f dockerfiles/Dockerfile.scgpt -t neuro/neuro-scgpt .
+FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    MAMBA_ROOT_PREFIX=/opt/conda \
+    ENV_NAME=scgpt
+SHELL ["/bin/bash", "-lc"]
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        bzip2 ca-certificates curl git tini && \
+    rm -rf /var/lib/apt/lists/*
+
+# micromamba (small, fast conda-compatible solver)
+RUN curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | \
+        tar -xvj -C /usr/local bin/micromamba
+
+WORKDIR /opt/neuro
+
+# Create the env from the committed spec (cached unless the spec changes)
+COPY envs/${ENV_NAME}.yml /tmp/env.yml
+RUN micromamba create -y -n ${ENV_NAME} -f /tmp/env.yml && micromamba clean -a -y
+
+# Install the shared package (editable) into the env
+COPY pyproject.toml ./
+COPY neurospatial ./neurospatial
+COPY scripts ./scripts
+RUN micromamba run -n ${ENV_NAME} pip install --no-deps -e .
+
+# Put the env on PATH so `python`/`nextflow` process scripts resolve directly
+ENV PATH=/opt/conda/envs/${ENV_NAME}/bin:$PATH
+ENTRYPOINT ["tini", "--"]
+CMD ["bash"]

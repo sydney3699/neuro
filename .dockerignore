@@ -1,0 +1,23 @@
+# Keep build context small — only pyproject, neurospatial/, scripts/, envs/ are needed.
+.git
+.gitignore
+data/
+results_local/
+results/
+notebooks/
+envspecs/
+**/__pycache__/
+*.pyc
+*.pyo
+*.h5ad
+*.h5
+*.rds
+*.loom
+*.zarr/
+*.parquet
+*.npz
+*.npy
+.pytest_cache/
+.ipynb_checkpoints/
+work/
+.nextflow*
