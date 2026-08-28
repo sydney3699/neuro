@@ -1,5 +1,7 @@
 # neurospatial — spatial cell–cell communication at the V1/V2 boundary
 
+[![CI](https://github.com/sydney3699/neuro/actions/workflows/ci.yml/badge.svg)](https://github.com/sydney3699/neuro/actions/workflows/ci.yml)
+
 Spatially-resolved cell–cell communication (CCC) analysis of the V1/V2 areal boundary in
 the developing human cortex (Qian/Walsh et al. 2025 MERFISH atlas), with a built-in
 methods comparison of standard vs. deep-learning tooling and a GW20→GW34 persistence arm.

@@ -1,0 +1,83 @@
+# Continuous integration for the neurospatial pipeline.
+#
+# Three independent jobs run in parallel on every push / PR to main:
+#   1. lint          — fast "will it crash?" check (syntax + undefined names)
+#   2. test          — the pytest unit suite for the neurospatial shared helpers
+#   3. pipeline-stub — a no-compute Nextflow `-stub` run of both entry workflows,
+#                      to catch DAG/channel wiring breakage before it hits a cluster
+#
+# None of these need a GPU, Docker, or secrets — they exercise the *portable*
+# parts of the project, which is exactly what CI should gate on.
+name: CI
+
+# When the workflow runs. `workflow_dispatch` also adds a "Run workflow" button
+# in the Actions tab so you can trigger it by hand.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # ----------------------------------------------------------------------------
+  lint:
+    name: Lint (error-level)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # Ruff, restricted to the "this would actually break at runtime" rules
+      # (syntax errors, undefined names) — not style — so CI stays meaningful
+      # without turning red over formatting on a research codebase.
+      - run: pipx install ruff
+      - run: ruff check --select E9,F63,F7,F82 .
+
+  # ----------------------------------------------------------------------------
+  test:
+    name: Unit tests (py ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      # A matrix runs the same job once per value — here, two Python versions,
+      # to catch version-specific breakage. `fail-fast: false` lets both finish
+      # even if one fails, so you see the full picture.
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip   # cache the pip download dir across runs → faster installs
+      # Editable install with the dev extra (pytest + numpy + pandas). The stage
+      # runtimes' heavy deps (torch/jax/scenvi/…) are NOT needed: the unit tests
+      # only touch the pure helpers in the neurospatial package.
+      - run: pip install -e ".[dev]"
+      - run: pytest -q
+
+  # ----------------------------------------------------------------------------
+  pipeline-stub:
+    name: Nextflow stub run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Nextflow needs a JVM (17+).
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install Nextflow
+        run: |
+          curl -s https://get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/
+      # `-stub` executes each process's stub block (which just `touch`es its
+      # declared outputs) instead of the real command — so the whole DAG runs
+      # in seconds with no data, no containers, no compute. It fails loudly if
+      # a process was renamed, a channel is mis-wired, or an output is undeclared.
+      - name: GW20 2x2 (stub)
+        run: nextflow run . -profile test --entry gw20 -stub
+      - name: GW34 persistence (stub)
+        run: nextflow run . -profile test --entry gw34 --layers cp,mz -stub
