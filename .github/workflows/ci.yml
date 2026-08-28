@@ -52,11 +52,28 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip   # cache the pip download dir across runs → faster installs
-      # Editable install with the dev extra (pytest + numpy + pandas). The stage
-      # runtimes' heavy deps (torch/jax/scenvi/…) are NOT needed: the unit tests
-      # only touch the pure helpers in the neurospatial package.
+      # Editable install with the dev extra (pytest + pytest-cov + numpy + pandas).
+      # The stage runtimes' heavy deps (torch/jax/scenvi/…) are NOT needed: the unit
+      # tests only touch the pure helpers in the neurospatial package.
       - run: pip install -e ".[dev]"
-      - run: pytest -q
+      # Run the suite with coverage of the neurospatial package. term-missing prints
+      # uncovered lines in the log; xml is machine-readable (for the artifact / Codecov).
+      - run: pytest -q --cov=neurospatial --cov-report=term-missing --cov-report=xml
+      # Surface the coverage table in the run's Summary tab (no external service).
+      - name: Coverage → job summary
+        run: |
+          {
+            echo "### Coverage — Python ${{ matrix.python-version }}"
+            echo '```'
+            python -m coverage report
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      # Keep the raw report as a downloadable artifact (per Python version, to avoid
+      # name collisions across the matrix).
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-py${{ matrix.python-version }}
+          path: coverage.xml
 
   # ----------------------------------------------------------------------------
   pipeline-stub:

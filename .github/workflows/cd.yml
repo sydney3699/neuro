@@ -1,0 +1,83 @@
+# Continuous delivery: build the container images and push them to a registry
+# whenever you cut a release tag (e.g. `git tag v0.1.0 && git push origin v0.1.0`).
+#
+# This is the "CD" half — it only runs on a version tag (or a manual dispatch),
+# NOT on every push, so day-to-day commits stay fast. It demonstrates the core
+# delivery pattern: authenticate to a registry with a secret, build with buildx,
+# derive image tags from the git tag, and push.
+#
+# Registry: GitHub Container Registry (ghcr.io) by default — it authenticates
+# with the built-in GITHUB_TOKEN, so there is ZERO secret setup to get this
+# working. To target AWS ECR instead, see the commented block below.
+name: CD
+
+on:
+  push:
+    tags: ["v*"]          # release tags only, e.g. v0.1.0, v1.2.3
+  workflow_dispatch: {}    # plus a manual "Run workflow" button (pushes :latest)
+
+# The GITHUB_TOKEN needs write access to packages to push to GHCR.
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-push:
+    name: Build & push ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    strategy:
+      # Build one image per matrix entry. Scoped to the CPU images: the 4 GPU
+      # images (envi/scvi/scgpt/stagate) pull multi-GB CUDA + torch/jax layers
+      # that overflow a standard runner's ~14 GB disk — build those on a larger
+      # / self-hosted runner (or manually) and add them here once available.
+      matrix:
+        image: [analysis, banksy]
+    steps:
+      - uses: actions/checkout@v4
+
+      # buildx gives us the modern builder (layer caching, multi-platform, etc.).
+      - uses: docker/setup-buildx-action@v3
+
+      # Authenticate to GHCR using the automatically-provided token — no manually
+      # created secret needed. (github.actor = the user who triggered the run.)
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---- AWS ECR alternative (uncomment + set the two repo secrets to use) ----
+      # - name: Configure AWS credentials
+      #     uses: aws-actions/configure-aws-credentials@v4
+      #     with:
+      #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #       aws-region: us-east-1
+      # - name: Log in to ECR
+      #     id: ecr
+      #     uses: aws-actions/amazon-ecr-login@v2
+      #   then point `images:` below at ${{ steps.ecr.outputs.registry }}/neuro-<image>
+
+      # Derive image tags/labels from git context: a `v1.2.3` tag yields image
+      # tags `1.2.3` and `1.2` (plus `latest`); a manual run yields just `latest`.
+      - name: Image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/neuro-${{ matrix.image }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+
+      # Build from the repo root (context: .) using the per-stage Dockerfile, and
+      # push the freshly-tagged image(s).
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dockerfiles/Dockerfile.${{ matrix.image }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

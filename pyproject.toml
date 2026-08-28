@@ -6,9 +6,9 @@ requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
-# Enough to run the unit test suite in a clean env (CI). The stage runtimes'
-# full deps are managed by the per-env conda specs in envs/, not here.
-dev = ["pytest>=7", "numpy", "pandas"]
+# Enough to run the unit test suite (+ coverage) in a clean env (CI). The stage
+# runtimes' full deps are managed by the per-env conda specs in envs/, not here.
+dev = ["pytest>=7", "pytest-cov", "numpy", "pandas"]
 
 [build-system]
 requires = ["setuptools>=61.0"]
