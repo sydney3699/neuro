@@ -1,0 +1,15 @@
+run,embedding,arm,namespace,resolution,n_clusters_in_run,n_labels_reached,n_focus_reached,n_focus_total,focus_missed,n_focus_near_miss_only,focus_near_miss_only
+annot_scgpt_coarse/FB080_scgpt_cluster_map,scgpt,coarse,coarse,1.0,15,9,2,3,EN-IT-L4-V1,0,
+annot_scvi_coarse/FB080_scvi_cluster_map,scvi,coarse,coarse,1.0,37,12,3,3,,0,
+annot_test/FB080_pca_cluster_map,pca,fine,fine,1.0,32,17,5,7,EN-IT-UL-2; EN-IT-UL-3,0,
+annot_scgpt/FB080_scgpt_cluster_map,scgpt,fine,fine,1.0,14,11,2,7,EN-IT-DL-1; EN-IT-DL-2; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3,1,EN-IT-DL-2(r2=0.8585)
+annot_scgpt_resgrid_R1.2/FB080_scgpt_cluster_map,scgpt,resgrid,fine,1.2,16,13,2,7,EN-IT-DL-1; EN-IT-DL-2; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3,2,EN-IT-DL-1(r2=0.8844); EN-IT-DL-2(r2=0.8585)
+annot_scgpt_resgrid_R1.4/FB080_scgpt_cluster_map,scgpt,resgrid,fine,1.4,17,15,4,7,EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3,1,EN-IT-UL-2(r2=0.8975)
+annot_scgpt_resgrid_R1.6/FB080_scgpt_cluster_map,scgpt,resgrid,fine,1.6,19,13,3,7,EN-IT-DL-1; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3,2,EN-IT-DL-1(r2=0.9164); EN-IT-UL-2(r2=0.8968)
+annot_scgpt_resgrid_R1.8/FB080_scgpt_cluster_map,scgpt,resgrid,fine,1.8,22,14,3,7,EN-IT-DL-1; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3,1,EN-IT-UL-2(r2=0.8913)
+annot_scgpt_resgrid_R2.0/FB080_scgpt_cluster_map,scgpt,resgrid,fine,2.0,25,14,3,7,EN-IT-DL-1; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3,2,EN-IT-L4-V1(r2=0.8996); EN-IT-UL-2(r2=0.8848)
+annot_scgpt_resgrid_R2.5/FB080_scgpt_cluster_map,scgpt,resgrid,fine,2.5,30,15,3,7,EN-IT-DL-1; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3,1,EN-IT-UL-3(r2=0.8676)
+annot_scgpt_resgrid_R3.0/FB080_scgpt_cluster_map,scgpt,resgrid,fine,3.0,34,16,3,7,EN-IT-DL-1; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3,3,EN-IT-DL-1(r2=0.9147); EN-IT-UL-2(r2=0.9038); EN-IT-UL-3(r2=0.8637)
+annot_scgpt_resgrid_R3.5/FB080_scgpt_cluster_map,scgpt,resgrid,fine,3.5,36,16,3,7,EN-IT-DL-1; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3,3,EN-IT-DL-1(r2=0.9205); EN-IT-UL-2(r2=0.9021); EN-IT-UL-3(r2=0.8637)
+annot_scgpt_resgrid_R4.0/FB080_scgpt_cluster_map,scgpt,resgrid,fine,4.0,42,16,3,7,EN-IT-DL-1; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3,3,EN-IT-DL-1(r2=0.9223); EN-IT-UL-2(r2=0.9038); EN-IT-UL-3(r2=0.8595)
+annot_scvi/FB080_scvi_cluster_map,scvi,fine,fine,1.0,37,16,4,7,EN-IT-DL-2; EN-IT-UL-2; EN-IT-UL-3,3,EN-IT-DL-2(r2=0.9263); EN-IT-UL-2(r2=0.8962); EN-IT-UL-3(r2=0.8636)

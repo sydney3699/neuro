@@ -1,0 +1,15 @@
+namespace,embedding,arm,resolution,run,n_clusters_in_run,EN-IT-DL,EN-IT-L4-V1,EN-IT-UL,EN-IT-DL-1,EN-IT-DL-2,EN-IT-DL-3,EN-IT-UL-1,EN-IT-UL-2,EN-IT-UL-3
+coarse,scgpt,coarse,1.0,annot_scgpt_coarse/FB080_scgpt_cluster_map,15,3.0,0,1.0,,,,,,
+coarse,scvi,coarse,1.0,annot_scvi_coarse/FB080_scvi_cluster_map,37,3.0,2,4.0,,,,,,
+fine,pca,fine,1.0,annot_test/FB080_pca_cluster_map,32,,2,,2.0,2.0,1.0,2.0,0.0,0.0
+fine,scgpt,fine,1.0,annot_scgpt/FB080_scgpt_cluster_map,14,,0,,0.0,0.0,2.0,1.0,0.0,0.0
+fine,scgpt,resgrid,1.2,annot_scgpt_resgrid_R1.2/FB080_scgpt_cluster_map,16,,0,,0.0,0.0,2.0,1.0,0.0,0.0
+fine,scgpt,resgrid,1.4,annot_scgpt_resgrid_R1.4/FB080_scgpt_cluster_map,17,,0,,1.0,1.0,1.0,1.0,0.0,0.0
+fine,scgpt,resgrid,1.6,annot_scgpt_resgrid_R1.6/FB080_scgpt_cluster_map,19,,0,,0.0,2.0,1.0,1.0,0.0,0.0
+fine,scgpt,resgrid,1.8,annot_scgpt_resgrid_R1.8/FB080_scgpt_cluster_map,22,,0,,0.0,1.0,2.0,2.0,0.0,0.0
+fine,scgpt,resgrid,2.0,annot_scgpt_resgrid_R2.0/FB080_scgpt_cluster_map,25,,0,,0.0,2.0,2.0,2.0,0.0,0.0
+fine,scgpt,resgrid,2.5,annot_scgpt_resgrid_R2.5/FB080_scgpt_cluster_map,30,,0,,0.0,2.0,5.0,2.0,0.0,0.0
+fine,scgpt,resgrid,3.0,annot_scgpt_resgrid_R3.0/FB080_scgpt_cluster_map,34,,0,,0.0,2.0,4.0,3.0,0.0,0.0
+fine,scgpt,resgrid,3.5,annot_scgpt_resgrid_R3.5/FB080_scgpt_cluster_map,36,,0,,0.0,3.0,5.0,3.0,0.0,0.0
+fine,scgpt,resgrid,4.0,annot_scgpt_resgrid_R4.0/FB080_scgpt_cluster_map,42,,0,,0.0,2.0,5.0,6.0,0.0,0.0
+fine,scvi,fine,1.0,annot_scvi/FB080_scvi_cluster_map,37,,2,,3.0,0.0,3.0,3.0,0.0,0.0

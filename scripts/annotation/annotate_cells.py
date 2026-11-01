@@ -64,6 +64,10 @@ def main():
     p.add_argument("--spatial-h5ad", default="/scratch/cole.sy/neuro/results/envi_FB080_lr/FB080_spatial_envi.h5ad")
     p.add_argument("--reference-h5ad", default="/scratch/cole.sy/neuro/data/raw/snrna.h5ad")
     p.add_argument("--ref-label-key", default="celltypes", help="reference obs column with cell-type labels")
+    p.add_argument("--ref-centroids-csv", default="",
+                   help="precomputed reference centroids (index=label, columns=shared genes, "
+                        "values=mean log1p-CP10k) instead of --reference-h5ad; build with "
+                        "scripts/annotation/build_ref_centroids.py")
     p.add_argument("--embedding", default="scvi", choices=["scvi", "pca"],
                    help="embedding backend (ignored if --embedding-obsm is set)")
     p.add_argument("--embedding-obsm", default="", help="read a precomputed embedding from spatial obsm[K] (e.g. scGPT/UCE)")
@@ -83,6 +87,11 @@ def main():
                    help="optional absolute margin floor (old fixed-0.05 behavior); disabled by default")
     p.add_argument("--unassign", action="store_true",
                    help="set low_confidence clusters to 'unassigned' rather than only flagging them")
+    p.add_argument("--save-embedding", action="store_true",
+                   help="also persist the per-cell embedding as {tag}_{emb}_embedding.parquet. "
+                        "Computed backends (scvi/pca) are otherwise discarded after Leiden, which "
+                        "leaves no input for embedding_discriminability.py; seeds are fixed, so a "
+                        "re-run with this flag reproduces the same latent.")
     p.add_argument("--tag", default="FB080", help="output filename tag")
     p.add_argument("--outdir", required=True)
     args = p.parse_args()
@@ -128,6 +137,12 @@ def main():
         emb = compute_embedding(adata, args.embedding, args.n_latent, args.scvi_epochs, args.seed, log)
     adata.obsm["X_emb"] = emb
 
+    if args.save_embedding:
+        pd.DataFrame(emb, index=adata.obs_names,
+                     columns=[f"{emb_label}_{i}" for i in range(emb.shape[1])]
+                     ).to_parquet(outdir / f"{args.tag}_{emb_label}_embedding.parquet")
+        log(f"  wrote {args.tag}_{emb_label}_embedding.parquet {emb.shape}")
+
     # --- Leiden on the embedding (shared across backends) ---
     log(f"  Leiden (res={args.leiden_resolution}) on embedding")
     sc.pp.neighbors(adata, use_rep="X_emb", n_neighbors=args.n_neighbors)
@@ -137,12 +152,26 @@ def main():
     log(f"  {n_clusters} Leiden clusters")
 
     # --- reference centroids over shared genes, log-normalized both sides ---
-    log(f"Loading reference {args.reference_h5ad}")
-    ref = ad.read_h5ad(args.reference_h5ad)
-    if args.ref_label_key not in ref.obs:
-        raise SystemExit(f"reference has no obs['{args.ref_label_key}']; have {list(ref.obs.columns)}")
-    shared = [g for g in genes if g in set(map(str, ref.var_names))]
-    log(f"  {len(shared)} shared genes (of {len(genes)} imputation genes)")
+    # Either loaded from the reference h5ad, or read from a precomputed centroid CSV
+    # (same table, built by build_ref_centroids.py with the same transform) for hosts
+    # where the multi-GB reference is unavailable -- e.g. after a scratch purge.
+    ref = None
+    if args.ref_centroids_csv:
+        log(f"Loading precomputed reference centroids {args.ref_centroids_csv}")
+        ref_cent_pre = pd.read_csv(args.ref_centroids_csv, index_col=0)
+        shared = [str(c) for c in ref_cent_pre.columns]
+        unknown = [g for g in shared if g not in set(genes)]
+        if unknown:
+            raise SystemExit(f"{len(unknown)} centroid genes absent from the imputation genes, "
+                             f"e.g. {unknown[:5]}")
+        log(f"  {len(ref_cent_pre)} centroids x {len(shared)} shared genes")
+    else:
+        log(f"Loading reference {args.reference_h5ad}")
+        ref = ad.read_h5ad(args.reference_h5ad)
+        if args.ref_label_key not in ref.obs:
+            raise SystemExit(f"reference has no obs['{args.ref_label_key}']; have {list(ref.obs.columns)}")
+        shared = [g for g in genes if g in set(map(str, ref.var_names))]
+        log(f"  {len(shared)} shared genes (of {len(genes)} imputation genes)")
 
     def lognorm_mean_by(a_expr, var_names, groups, shared_genes):
         """Return DataFrame [group x shared_genes] of log1p-CP10k mean profiles."""
@@ -155,7 +184,9 @@ def main():
         df["_g"] = np.asarray(groups)
         return df.groupby("_g").mean()
 
-    ref_cent = lognorm_mean_by(ref.X, ref.var_names, ref.obs[args.ref_label_key].astype(str).values, shared)
+    ref_cent = (ref_cent_pre if ref is None else
+                lognorm_mean_by(ref.X, ref.var_names,
+                                ref.obs[args.ref_label_key].astype(str).values, shared))
     clus_mean = lognorm_mean_by(adata.X, adata.var_names, adata.obs["leiden"].astype(str).values, shared)
     del ref
 
