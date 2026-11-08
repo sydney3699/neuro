@@ -1,0 +1,5 @@
+region,method,n_seeds,published_cosine_median,seed_mean,seed_sd,seed_min,seed_max,seed_range,published_pctile_in_seeds
+v1,banksy,10,0.6066,0.7202,0.0593,0.5834,0.7863,0.2029,10.0
+v1,stagate,10,0.5203,0.4886,0.1453,0.2567,0.618,0.3613,40.0
+v2,banksy,10,0.7627,0.7701,0.123,0.6235,0.9187,0.2952,60.0
+v2,stagate,10,0.7698,0.7777,0.0886,0.6673,0.9129,0.2456,60.0

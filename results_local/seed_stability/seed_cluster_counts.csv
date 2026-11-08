@@ -1,0 +1,4 @@
+group,factor,embedding,n_seeds,mean,sd,min,max,range,labels_mean,labels_sd,labels_min,labels_max
+annot_seed_scgpt_leiden,leiden,scgpt,10,15.5,1.0801234497346435,14,18,4,11.7,0.9486832980505134,10,13
+annot_seed_scvi_leiden,leiden,scvi,10,37.0,1.05409255338946,36,39,3,16.5,0.5270462766947303,16,17
+annot_seed_scvi_train,train,scvi,5,37.8,0.44721359549995865,37,38,1,16.6,0.547722557505166,16,17

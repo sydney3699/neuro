@@ -1,0 +1,26 @@
+group,seed,factor,embedding,n_clusters,n_labels_reached,n_focus_reached,focus_missed,median_best_corr
+annot_seed_scgpt_leiden,0,leiden,scgpt,15,12,3,EN-IT-DL-1; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.9117
+annot_seed_scgpt_leiden,1,leiden,scgpt,15,13,3,EN-IT-DL-1; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8943
+annot_seed_scgpt_leiden,2,leiden,scgpt,18,11,2,EN-IT-DL-1; EN-IT-DL-2; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.9023
+annot_seed_scgpt_leiden,3,leiden,scgpt,16,13,3,EN-IT-DL-1; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.9119
+annot_seed_scgpt_leiden,4,leiden,scgpt,16,12,3,EN-IT-DL-1; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8884
+annot_seed_scgpt_leiden,5,leiden,scgpt,15,10,3,EN-IT-DL-1; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.9056
+annot_seed_scgpt_leiden,6,leiden,scgpt,14,11,2,EN-IT-DL-1; EN-IT-DL-2; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.9083
+annot_seed_scgpt_leiden,7,leiden,scgpt,15,11,2,EN-IT-DL-1; EN-IT-DL-2; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8905
+annot_seed_scgpt_leiden,8,leiden,scgpt,16,12,3,EN-IT-DL-1; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.9143
+annot_seed_scgpt_leiden,9,leiden,scgpt,15,12,2,EN-IT-DL-1; EN-IT-DL-2; EN-IT-L4-V1; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.9134
+annot_seed_scvi_leiden,0,leiden,scvi,36,17,5,EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8982
+annot_seed_scvi_leiden,1,leiden,scvi,36,17,5,EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8964
+annot_seed_scvi_leiden,2,leiden,scvi,36,17,5,EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8951
+annot_seed_scvi_leiden,3,leiden,scvi,39,16,4,EN-IT-DL-2; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8971
+annot_seed_scvi_leiden,4,leiden,scvi,37,16,4,EN-IT-DL-2; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8998
+annot_seed_scvi_leiden,5,leiden,scvi,38,17,5,EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8939
+annot_seed_scvi_leiden,6,leiden,scvi,36,16,4,EN-IT-DL-2; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8946
+annot_seed_scvi_leiden,7,leiden,scvi,38,17,5,EN-IT-DL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8972
+annot_seed_scvi_leiden,8,leiden,scvi,37,16,5,EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8974
+annot_seed_scvi_leiden,9,leiden,scvi,37,16,4,EN-IT-DL-2; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8965
+annot_seed_scvi_train,0,train,scvi,37,16,4,EN-IT-DL-2; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8941
+annot_seed_scvi_train,1,train,scvi,38,17,5,EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.9002
+annot_seed_scvi_train,2,train,scvi,38,17,5,EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8989
+annot_seed_scvi_train,3,train,scvi,38,16,4,EN-IT-DL-2; EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.8992
+annot_seed_scvi_train,4,train,scvi,38,17,5,EN-IT-UL-2; EN-IT-UL-3; EN-IT-UL-4; EN-IT-UL-5,0.9002

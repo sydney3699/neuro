@@ -1,0 +1,41 @@
+region,method,seed,n_labels_seed,n_labels_ref,n_shared,only_in_seed,only_in_ref
+v1,banksy,0,12,16,11,EN-IT-DL-2,EN-ET-5; EN-IT-DL-1; EN-IT-L4-V1; EN-Mig-2; Microglia
+v1,banksy,1,13,16,11,EN-ET-1; EN-IT-DL-2,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-Mig-2; vRG
+v1,banksy,2,11,16,11,,EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2; vRG
+v1,banksy,3,13,16,12,EN-IT-DL-2,EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-1
+v1,banksy,4,12,16,11,EN-IT-DL-2,EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2; Microglia
+v1,banksy,5,10,16,9,EN-IT-DL-2,EN-ET-5; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2; RG; vRG
+v1,banksy,6,11,16,11,,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2
+v1,banksy,7,11,16,11,,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; vRG
+v1,banksy,8,12,16,11,EN-IT-DL-2,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2
+v1,banksy,9,12,16,12,,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2
+v1,stagate,0,12,16,11,EN-IT-DL-2,EN-ET-5; EN-IT-DL-1; EN-IT-L4-V1; EN-Mig-2; Microglia
+v1,stagate,1,13,16,11,EN-ET-1; EN-IT-DL-2,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-Mig-2; vRG
+v1,stagate,2,11,16,11,,EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2; vRG
+v1,stagate,3,13,16,12,EN-IT-DL-2,EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-1
+v1,stagate,4,12,16,11,EN-IT-DL-2,EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2; Microglia
+v1,stagate,5,10,16,9,EN-IT-DL-2,EN-ET-5; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2; RG; vRG
+v1,stagate,6,11,16,11,,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2
+v1,stagate,7,11,16,11,,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; vRG
+v1,stagate,8,12,16,11,EN-IT-DL-2,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2
+v1,stagate,9,12,16,12,,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2
+v2,banksy,0,12,16,11,EN-IT-DL-2,EN-ET-5; EN-IT-DL-1; EN-IT-L4-V1; EN-Mig-2; Microglia
+v2,banksy,1,13,16,11,EN-ET-1; EN-IT-DL-2,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-Mig-2; vRG
+v2,banksy,2,11,16,11,,EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2; vRG
+v2,banksy,3,13,16,12,EN-IT-DL-2,EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-1
+v2,banksy,4,12,16,11,EN-IT-DL-2,EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2; Microglia
+v2,banksy,5,10,16,9,EN-IT-DL-2,EN-ET-5; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2; RG; vRG
+v2,banksy,6,11,16,11,,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2
+v2,banksy,7,11,16,11,,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; vRG
+v2,banksy,8,12,16,11,EN-IT-DL-2,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2
+v2,banksy,9,12,16,12,,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2
+v2,stagate,0,12,16,11,EN-IT-DL-2,EN-ET-5; EN-IT-DL-1; EN-IT-L4-V1; EN-Mig-2; Microglia
+v2,stagate,1,13,16,11,EN-ET-1; EN-IT-DL-2,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-Mig-2; vRG
+v2,stagate,2,11,16,11,,EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2; vRG
+v2,stagate,3,13,16,12,EN-IT-DL-2,EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-1
+v2,stagate,4,12,16,11,EN-IT-DL-2,EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2; Microglia
+v2,stagate,5,10,16,9,EN-IT-DL-2,EN-ET-5; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2; RG; vRG
+v2,stagate,6,11,16,11,,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2
+v2,stagate,7,11,16,11,,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; vRG
+v2,stagate,8,12,16,11,EN-IT-DL-2,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2; EN-Mig-2
+v2,stagate,9,12,16,12,,EN-ET-2; EN-IT-DL-1; EN-IT-L4-V1; EN-L2

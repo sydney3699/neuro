@@ -1,0 +1,28 @@
+group,factor,embedding,label,n_seeds,n_seeds_reached,reach_frac,stability,citable,claim,miss_upper95,n_seeds_runnerup,near_miss_only
+annot_seed_scgpt_leiden,leiden,scgpt,EN-IT-DL-1,10,0,0.0,stable_missed,True,never reached (0/N; see miss_upper95),0.2589,1,True
+annot_seed_scgpt_leiden,leiden,scgpt,EN-IT-L4-V1,10,0,0.0,stable_missed,True,never reached (0/N; see miss_upper95),0.2589,0,False
+annot_seed_scgpt_leiden,leiden,scgpt,EN-IT-UL-2,10,0,0.0,stable_missed,True,never reached (0/N; see miss_upper95),0.2589,2,True
+annot_seed_scgpt_leiden,leiden,scgpt,EN-IT-UL-3,10,0,0.0,stable_missed,True,never reached (0/N; see miss_upper95),0.2589,5,True
+annot_seed_scgpt_leiden,leiden,scgpt,EN-IT-UL-4,10,0,0.0,stable_missed,True,never reached (0/N; see miss_upper95),0.2589,0,False
+annot_seed_scgpt_leiden,leiden,scgpt,EN-IT-UL-5,10,0,0.0,stable_missed,True,never reached (0/N; see miss_upper95),0.2589,0,False
+annot_seed_scgpt_leiden,leiden,scgpt,EN-IT-DL-3,10,10,1.0,stable_reached,True,reached at every seed,,8,False
+annot_seed_scgpt_leiden,leiden,scgpt,EN-IT-UL-1,10,10,1.0,stable_reached,True,reached at every seed,,6,False
+annot_seed_scgpt_leiden,leiden,scgpt,EN-IT-DL-2,10,6,0.6,unstable,False,SEED-DEPENDENT -- do not cite as a finding,,8,False
+annot_seed_scvi_leiden,leiden,scvi,EN-IT-UL-3,10,0,0.0,stable_missed,True,never reached (0/N; see miss_upper95),0.2589,6,True
+annot_seed_scvi_leiden,leiden,scvi,EN-IT-UL-4,10,0,0.0,stable_missed,True,never reached (0/N; see miss_upper95),0.2589,0,False
+annot_seed_scvi_leiden,leiden,scvi,EN-IT-UL-5,10,0,0.0,stable_missed,True,never reached (0/N; see miss_upper95),0.2589,0,False
+annot_seed_scvi_leiden,leiden,scvi,EN-IT-DL-1,10,10,1.0,stable_reached,True,reached at every seed,,5,False
+annot_seed_scvi_leiden,leiden,scvi,EN-IT-DL-3,10,10,1.0,stable_reached,True,reached at every seed,,10,False
+annot_seed_scvi_leiden,leiden,scvi,EN-IT-L4-V1,10,10,1.0,stable_reached,True,reached at every seed,,6,False
+annot_seed_scvi_leiden,leiden,scvi,EN-IT-UL-1,10,10,1.0,stable_reached,True,reached at every seed,,9,False
+annot_seed_scvi_leiden,leiden,scvi,EN-IT-DL-2,10,5,0.5,unstable,False,SEED-DEPENDENT -- do not cite as a finding,,10,False
+annot_seed_scvi_leiden,leiden,scvi,EN-IT-UL-2,10,1,0.1,unstable,False,SEED-DEPENDENT -- do not cite as a finding,,10,False
+annot_seed_scvi_train,train,scvi,EN-IT-UL-2,5,0,0.0,stable_missed,True,never reached (0/N; see miss_upper95),0.4507,5,True
+annot_seed_scvi_train,train,scvi,EN-IT-UL-3,5,0,0.0,stable_missed,True,never reached (0/N; see miss_upper95),0.4507,4,True
+annot_seed_scvi_train,train,scvi,EN-IT-UL-4,5,0,0.0,stable_missed,True,never reached (0/N; see miss_upper95),0.4507,0,False
+annot_seed_scvi_train,train,scvi,EN-IT-UL-5,5,0,0.0,stable_missed,True,never reached (0/N; see miss_upper95),0.4507,0,False
+annot_seed_scvi_train,train,scvi,EN-IT-DL-1,5,5,1.0,stable_reached,True,reached at every seed,,1,False
+annot_seed_scvi_train,train,scvi,EN-IT-DL-3,5,5,1.0,stable_reached,True,reached at every seed,,5,False
+annot_seed_scvi_train,train,scvi,EN-IT-L4-V1,5,5,1.0,stable_reached,True,reached at every seed,,2,False
+annot_seed_scvi_train,train,scvi,EN-IT-UL-1,5,5,1.0,stable_reached,True,reached at every seed,,5,False
+annot_seed_scvi_train,train,scvi,EN-IT-DL-2,5,3,0.6,unstable,False,SEED-DEPENDENT -- do not cite as a finding,,5,False
