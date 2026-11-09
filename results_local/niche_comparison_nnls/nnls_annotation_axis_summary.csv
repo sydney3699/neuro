@@ -1,0 +1,5 @@
+region,method,n_seed_pairs,nnls_matched_cosine_median,nnls_matched_cosine_min,nnls_matched_cosine_max,nnls_matched_cosine_range,baseline_matched_cosine,nnls_gap_median,nnls_gap_min,nnls_gap_max,nnls_gap_range,baseline_gap
+v1,banksy,25,0.9281,0.8979,0.958,0.0601,0.6066,0.4808,0.4468,0.5109,0.0641,0.3993
+v1,stagate,25,0.8583,0.8056,0.9138,0.1082,0.5203,0.3466,0.3034,0.3977,0.0943,0.3184
+v2,banksy,25,0.919,0.8924,0.9353,0.0429,0.7627,0.3689,0.3482,0.3916,0.0434,0.3975
+v2,stagate,25,0.9148,0.8543,0.9382,0.0839,0.7698,0.3985,0.3538,0.4401,0.0863,0.4497
