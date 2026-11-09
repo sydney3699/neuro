@@ -3,177 +3,267 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Niche Comparison under NNLS Transfer — V1 vs V2</title>
+<title>NNLS Niche Comparison</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
 <style>
-.viz-root{color-scheme:light;--surface-1:#fcfcfb;--page:#f9f9f7;--text-primary:#0b0b0b;
---text-secondary:#52514e;--text-muted:#898781;--grid:#e1e0d9;--baseline:#c3c2b7;
---border:rgba(11,11,11,0.10);--c-baseline:#2a78d6;--c-nnls:#1baf7a;--c-scvi:#eda100;
---c-scgpt:#e87ba4;--status-good:#0ca30c;--status-critical:#d03b3b;--track:#eceae3;}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .viz-root{
-color-scheme:dark;--surface-1:#1a1a19;--page:#0d0d0d;--text-primary:#fff;
---text-secondary:#c3c2b7;--text-muted:#898781;--grid:#2c2c2a;--baseline:#383835;
---border:rgba(255,255,255,0.10);--c-baseline:#3987e5;--c-nnls:#199e70;--c-scvi:#c98500;
---c-scgpt:#d55181;--status-good:#0ca30c;--status-critical:#e66767;--track:#242423;}}
-:root[data-theme="dark"] .viz-root{color-scheme:dark;--surface-1:#1a1a19;--page:#0d0d0d;
---text-primary:#fff;--text-secondary:#c3c2b7;--text-muted:#898781;--grid:#2c2c2a;
---baseline:#383835;--border:rgba(255,255,255,0.10);--c-baseline:#3987e5;--c-nnls:#199e70;
---c-scvi:#c98500;--c-scgpt:#d55181;--status-good:#0ca30c;--status-critical:#e66767;--track:#242423;}
-body{margin:0;background:var(--page);}
-.viz-root{background:var(--page);color:var(--text-primary);
-font:14px/1.55 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
-padding:32px 24px 64px;max-width:1080px;margin:0 auto;}
-h1{font-size:24px;margin:0 0 6px;letter-spacing:-0.01em;}
-h2{font-size:17px;margin:38px 0 4px;letter-spacing:-0.005em;}
-h3{font-size:14px;margin:20px 0 6px;color:var(--text-secondary);font-weight:600;}
-.sub{color:var(--text-secondary);margin:0 0 4px;}
-.muted{color:var(--text-muted);font-size:12.5px;}
-.card{background:var(--surface-1);border:1px solid var(--border);border-radius:10px;
-padding:16px 18px;margin:12px 0;}
-.callout{border-left:3px solid var(--c-nnls);padding:10px 14px;margin:14px 0;
-background:var(--surface-1);border-radius:0 8px 8px 0;}
-.callout.warn{border-left-color:var(--status-critical);}
-table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0;}
-th,td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--grid);
-vertical-align:middle;white-space:nowrap;}
-th{color:var(--text-secondary);font-weight:600;font-size:12px;
-text-transform:uppercase;letter-spacing:0.04em;}
-td.num{font-variant-numeric:tabular-nums;}
-.bar-track{display:inline-block;position:relative;height:9px;background:var(--track);
-border-radius:5px;vertical-align:middle;overflow:hidden;}
-.bar-fill{display:block;height:9px;border-radius:0 4px 4px 0;}
-.bar-span{position:absolute;top:0;height:9px;border-radius:4px;}
-.legend{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0 2px;font-size:12.5px;
-color:var(--text-secondary);}
-.key{display:inline-flex;align-items:center;gap:6px;}
-.dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
-.scroll{overflow-x:auto;}
-.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;
-border:1px solid var(--border);color:var(--text-secondary);}
-.good{color:var(--status-good);font-weight:600;}
-.bad{color:var(--status-critical);font-weight:600;}
-code{font-size:12.5px;background:var(--track);padding:1px 5px;border-radius:4px;}
+:root{
+  --ground:#faf8f4; --surface:#ffffff; --sunken:#f1eee7;
+  --ink:#171614; --ink-2:#56534c; --ink-3:#8b877e;
+  --rule:#e3e0d7; --rule-strong:#cdc8ba;
+  --baseline:#2a78d6; --nnls:#1baf7a; --scvi:#b37800; --scgpt:#c0577f;
+  --good:#0a7d35; --critical:#c0392b;
+  --shadow:0 1px 2px rgba(23,22,20,.05);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#131210; --surface:#1c1b18; --sunken:#242219;
+    --ink:#f5f3ee; --ink-2:#c2bdb1; --ink-3:#8b877e;
+    --rule:#2e2b25; --rule-strong:#413d34;
+    --baseline:#5e9ff0; --nnls:#3cc492; --scvi:#d9a440; --scgpt:#e18cad;
+    --good:#4cc46a; --critical:#f0776a;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#131210; --surface:#1c1b18; --sunken:#242219;
+  --ink:#f5f3ee; --ink-2:#c2bdb1; --ink-3:#8b877e;
+  --rule:#2e2b25; --rule-strong:#413d34;
+  --baseline:#5e9ff0; --nnls:#3cc492; --scvi:#d9a440; --scgpt:#e18cad;
+  --good:#4cc46a; --critical:#f0776a;
+  --shadow:none;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:15px;line-height:1.6;}
+.wrap{max-width:980px;margin:0 auto;padding:56px 28px 80px;}
+h1{font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;font-size:34px;
+  line-height:1.15;margin:0 0 10px;letter-spacing:-0.015em;text-wrap:balance;}
+h2{font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;font-size:21px;
+  margin:0 0 6px;letter-spacing:-0.01em;text-wrap:balance;}
+h3{font-size:14px;font-weight:600;margin:0 0 8px;color:var(--ink-2);}
+p{margin:0 0 10px;max-width:68ch;}
+.lede{font-size:16.5px;color:var(--ink-2);max-width:66ch;margin:0 0 4px;}
+.meta{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;
+  color:var(--ink-3);letter-spacing:0.02em;margin:0 0 40px;}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;
+  font-weight:500;letter-spacing:0.13em;text-transform:uppercase;color:var(--ink-3);
+  display:block;margin:0 0 7px;}
+section{margin:0 0 46px;}
+.sec-head{border-top:1px solid var(--rule-strong);padding-top:14px;margin-bottom:16px;}
+.note{color:var(--ink-2);font-size:14px;max-width:68ch;margin:10px 0 0;}
+.verdict{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--rule);border:1px solid var(--rule);border-radius:3px;
+  overflow:hidden;margin:0 0 44px;}
+.vcell{background:var(--surface);padding:18px 20px;}
+.vlabel{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;
+  letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-3);display:block;
+  margin-bottom:8px;}
+.vnum{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:25px;
+  font-weight:500;letter-spacing:-0.02em;display:block;line-height:1.1;
+  font-variant-numeric:tabular-nums;}
+.vwas{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;
+  color:var(--ink-3);display:block;margin-top:6px;}
+.flag{border-left:2px solid var(--critical);background:var(--sunken);
+  padding:13px 16px;margin:16px 0;border-radius:0 3px 3px 0;}
+.flag.ok{border-left-color:var(--nnls);}
+.flag p{margin:0;font-size:14px;max-width:72ch;}
+.scroll{overflow-x:auto;margin:14px 0 0;}
+table{border-collapse:collapse;width:100%;font-size:13.5px;}
+th,td{text-align:left;padding:7px 12px 7px 0;border-bottom:1px solid var(--rule);
+  white-space:nowrap;vertical-align:middle;}
+th{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;
+  font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);
+  border-bottom:1px solid var(--rule-strong);padding-bottom:8px;}
+td.n{font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;}
+tr:last-child td{border-bottom:none;}
+.track{display:inline-block;position:relative;height:7px;background:var(--sunken);
+  border-radius:4px;vertical-align:middle;overflow:hidden;}
+.fill{display:block;height:7px;border-radius:0 3px 3px 0;}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-family:"IBM Plex Mono",monospace;
+  font-size:11.5px;color:var(--ink-2);margin:12px 0 0;}
+.key{display:inline-flex;align-items:center;gap:7px;}
+.dot{width:9px;height:9px;border-radius:2px;display:inline-block;flex:none;}
+.tag{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;
+  padding:1px 7px;border:1px solid var(--rule-strong);border-radius:2px;
+  color:var(--ink-2);white-space:nowrap;}
+.tag.hit{color:var(--good);border-color:var(--good);}
+.good{color:var(--good);} .bad{color:var(--critical);}
+code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;
+  background:var(--sunken);padding:1px 5px;border-radius:2px;}
+footer{border-top:1px solid var(--rule-strong);padding-top:14px;margin-top:8px;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11.5px;color:var(--ink-3);}
+@media (max-width:720px){
+  .verdict{grid-template-columns:1fr;} h1{font-size:27px;} .wrap{padding:36px 18px 56px;}
+}
 </style>
 </head>
 <body>
-<div class="viz-root">
-<h1>Niche comparison under the NNLS label transfer</h1>
-<p class="sub">V1 vs V2 &middot; scVI/scGPT annotation &times; Banksy/STAGATE domains &middot; k=8 &middot; 5 seeds per arm</p>
-<p class="muted">Regenerated from the NNLS deconvolution transfer. Supersedes the previous dashboard, whose Q1 composition cosines were single-run point estimates later shown to vary by 0.20&ndash;0.36 across seeds alone.</p>
-<div class="callout"><strong>Why these numbers moved.</strong> The baseline transfer assigned each Leiden cluster one label by <code>argmax</code> correlation to a reference centroid. Cells of the contested EN-IT subtypes never exceeded ~26% of any scGPT cluster, so that argmax could never land on them. NNLS (non-negative least squares) instead fits each cluster mean as a <em>non-negative mixture</em> of all 35 reference centroids, so a type present at 26% surfaces as a 0.26 weight rather than vanishing.</div>
-<h2>1. Composition must read the mixture, not the hard labels</h2>
-<p class="sub">NNLS still writes one hard label per cell (the mixture's argmax) for downstream compatibility &mdash; but in the scGPT arm that argmax <em>still</em> never lands on the contested types. Building composition from hard labels would therefore recover nothing. All composition below is the mean mixture vector per domain.</p>
-<div class="card">
-<h3>Mean composition mass per EN-IT subtype &mdash; weighted vs hard</h3>
-<div class="legend"><span class="key"><span class="dot" style="background:var(--c-scvi)"></span>scVI</span><span class="key"><span class="dot" style="background:var(--c-scgpt)"></span>scGPT</span><span class="key muted">bars = weighted (mixture) mass</span></div>
-<div class="scroll"><table><thead><tr><th>EN-IT subtype</th><th colspan="2">scVI weighted</th><th class="num">scVI hard</th><th colspan="2">scGPT weighted</th><th class="num">scGPT hard</th><th>recovered only by weights</th></tr></thead><tbody>
+<div class="wrap">
+<h1>Niche comparison, rebuilt on a mixture-based label transfer</h1>
+<p class="lede">V1 vs V2 visual cortex at GW20 &mdash; scVI/scGPT annotation &times; Banksy/STAGATE domains, k=8 domains, 5 seeds per arm.</p>
+<p class="meta">Supersedes the previous dashboard, whose Q1 figures were single-run point estimates.</p>
+<div class="verdict">
+<div class="vcell"><span class="vlabel">Q1 effect (gap)</span><span class="vnum">0.35&ndash;0.48</span><span class="vwas">essentially unchanged</span></div>
+<div class="vcell"><span class="vlabel">Seed noise</span><span class="vnum" style="color:var(--nnls)">0.04&ndash;0.11</span><span class="vwas">was 0.20&ndash;0.36</span></div>
+<div class="vcell"><span class="vlabel">Contested subtypes reached</span><span class="vnum" style="color:var(--nnls)">3 / 3</span><span class="vwas">scGPT was 0/10 seeds</span></div>
+</div>
+<div class="flag ok"><p><strong>The headline.</strong> The Q1 effect itself barely moved. What moved is whether it can be measured: seed noise that used to be as large as the effect is now 3&ndash;5&times; smaller than it. Q1 is statable as a number for the first time.</p></div>
+<section><div class="sec-head"><span class="eyebrow">Method</span><h2>Why the numbers moved</h2></div>
+<p>The baseline transfer gave each Leiden cluster one label by <code>argmax</code> correlation against a reference centroid. Cells of the contested EN-IT subtypes never exceeded ~26% of any scGPT cluster, so that argmax could never land on them. Non-negative least squares instead fits each cluster mean as a non-negative mixture of all 35 reference centroids, so a type present at 26% surfaces as a 0.26 weight rather than vanishing.</p>
+</section>
+<section><div class="sec-head"><span class="eyebrow">Audit</span><h2>Composition has to read the mixture, not the labels</h2></div>
+<p>NNLS still writes one hard label per cell &mdash; the mixture's argmax &mdash; for downstream compatibility. In the scGPT arm that argmax <em>still</em> never lands on the contested types, so composition built from hard labels would recover nothing. Every composition below is the mean mixture vector per domain.</p>
+<div class="legend"><span class="key"><span class="dot" style="background:var(--scvi)"></span>scVI</span><span class="key"><span class="dot" style="background:var(--scgpt)"></span>scGPT</span><span class="key">bars show weighted (mixture) mass</span></div>
+<div class="scroll"><table><thead><tr><th>EN-IT subtype</th><th colspan="2">scVI weighted</th><th>scVI hard</th><th colspan="2">scGPT weighted</th><th>scGPT hard</th><th>weights only</th></tr></thead><tbody>
 <tr><td>EN-IT-DL-1</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:28.0px;background:var(--c-scvi)"></span></span></td><td class="num">0.0416</td><td class="num">0.0781</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:8.4px;background:var(--c-scgpt)"></span></span></td><td class="num">0.0124</td><td class="num">0.0000</td>
-<td><span class="pill good">scgpt</span></td></tr>
+<td><span class="track" style="width:72px"><span class="fill" style="width:22.4px;background:var(--scvi)"></span></span></td><td class="n">0.0416</td><td class="n">0.0781</td>
+<td><span class="track" style="width:72px"><span class="fill" style="width:6.7px;background:var(--scgpt)"></span></span></td><td class="n">0.0124</td><td class="n">0.0000</td>
+<td><span class="tag hit">scgpt</span></td></tr>
 <tr><td>EN-IT-DL-2</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:22.1px;background:var(--c-scvi)"></span></span></td><td class="num">0.0328</td><td class="num">0.0239</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:34.4px;background:var(--c-scgpt)"></span></span></td><td class="num">0.0511</td><td class="num">0.0389</td>
-<td><span class="muted">&mdash;</span></td></tr>
+<td><span class="track" style="width:72px"><span class="fill" style="width:17.7px;background:var(--scvi)"></span></span></td><td class="n">0.0328</td><td class="n">0.0239</td>
+<td><span class="track" style="width:72px"><span class="fill" style="width:27.5px;background:var(--scgpt)"></span></span></td><td class="n">0.0511</td><td class="n">0.0389</td>
+<td><span class="n" style="color:var(--ink-3)">&mdash;</span></td></tr>
 <tr><td>EN-IT-DL-3</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:57.1px;background:var(--c-scvi)"></span></span></td><td class="num">0.0847</td><td class="num">0.1058</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:90.0px;background:var(--c-scgpt)"></span></span></td><td class="num">0.1335</td><td class="num">0.2848</td>
-<td><span class="muted">&mdash;</span></td></tr>
+<td><span class="track" style="width:72px"><span class="fill" style="width:45.7px;background:var(--scvi)"></span></span></td><td class="n">0.0847</td><td class="n">0.1058</td>
+<td><span class="track" style="width:72px"><span class="fill" style="width:72.0px;background:var(--scgpt)"></span></span></td><td class="n">0.1335</td><td class="n">0.2848</td>
+<td><span class="n" style="color:var(--ink-3)">&mdash;</span></td></tr>
 <tr><td>EN-IT-L4-V1</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:27.7px;background:var(--c-scvi)"></span></span></td><td class="num">0.0411</td><td class="num">0.0733</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:19.3px;background:var(--c-scgpt)"></span></span></td><td class="num">0.0286</td><td class="num">0.0000</td>
-<td><span class="pill good">scgpt</span></td></tr>
+<td><span class="track" style="width:72px"><span class="fill" style="width:22.2px;background:var(--scvi)"></span></span></td><td class="n">0.0411</td><td class="n">0.0733</td>
+<td><span class="track" style="width:72px"><span class="fill" style="width:15.4px;background:var(--scgpt)"></span></span></td><td class="n">0.0286</td><td class="n">0.0000</td>
+<td><span class="tag hit">scgpt</span></td></tr>
 <tr><td>EN-IT-UL-1</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:24.9px;background:var(--c-scvi)"></span></span></td><td class="num">0.0369</td><td class="num">0.0479</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:21.4px;background:var(--c-scgpt)"></span></span></td><td class="num">0.0318</td><td class="num">0.0000</td>
-<td><span class="pill good">scgpt</span></td></tr>
+<td><span class="track" style="width:72px"><span class="fill" style="width:19.9px;background:var(--scvi)"></span></span></td><td class="n">0.0369</td><td class="n">0.0479</td>
+<td><span class="track" style="width:72px"><span class="fill" style="width:17.1px;background:var(--scgpt)"></span></span></td><td class="n">0.0318</td><td class="n">0.0000</td>
+<td><span class="tag hit">scgpt</span></td></tr>
 <tr><td>EN-IT-UL-2</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:5.0px;background:var(--c-scvi)"></span></span></td><td class="num">0.0074</td><td class="num">0.0000</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:0.5px;background:var(--c-scgpt)"></span></span></td><td class="num">0.0008</td><td class="num">0.0000</td>
-<td><span class="muted">&mdash;</span></td></tr>
+<td><span class="track" style="width:72px"><span class="fill" style="width:4.0px;background:var(--scvi)"></span></span></td><td class="n">0.0074</td><td class="n">0.0000</td>
+<td><span class="track" style="width:72px"><span class="fill" style="width:0.4px;background:var(--scgpt)"></span></span></td><td class="n">0.0008</td><td class="n">0.0000</td>
+<td><span class="n" style="color:var(--ink-3)">&mdash;</span></td></tr>
 <tr><td>EN-IT-UL-3</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:3.9px;background:var(--c-scvi)"></span></span></td><td class="num">0.0058</td><td class="num">0.0000</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:3.0px;background:var(--c-scgpt)"></span></span></td><td class="num">0.0045</td><td class="num">0.0000</td>
-<td><span class="muted">&mdash;</span></td></tr>
+<td><span class="track" style="width:72px"><span class="fill" style="width:3.1px;background:var(--scvi)"></span></span></td><td class="n">0.0058</td><td class="n">0.0000</td>
+<td><span class="track" style="width:72px"><span class="fill" style="width:2.4px;background:var(--scgpt)"></span></span></td><td class="n">0.0045</td><td class="n">0.0000</td>
+<td><span class="n" style="color:var(--ink-3)">&mdash;</span></td></tr>
 <tr><td>EN-IT-UL-4</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:5.4px;background:var(--c-scvi)"></span></span></td><td class="num">0.0080</td><td class="num">0.0000</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:1.4px;background:var(--c-scgpt)"></span></span></td><td class="num">0.0020</td><td class="num">0.0000</td>
-<td><span class="muted">&mdash;</span></td></tr>
+<td><span class="track" style="width:72px"><span class="fill" style="width:4.3px;background:var(--scvi)"></span></span></td><td class="n">0.0080</td><td class="n">0.0000</td>
+<td><span class="track" style="width:72px"><span class="fill" style="width:1.1px;background:var(--scgpt)"></span></span></td><td class="n">0.0020</td><td class="n">0.0000</td>
+<td><span class="n" style="color:var(--ink-3)">&mdash;</span></td></tr>
 <tr><td>EN-IT-UL-5</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:0.0px;background:var(--c-scvi)"></span></span></td><td class="num">0.0000</td><td class="num">0.0000</td>
-<td><span class="bar-track" style="width:90px"><span class="bar-fill" style="width:0.0px;background:var(--c-scgpt)"></span></span></td><td class="num">0.0000</td><td class="num">0.0000</td>
-<td><span class="muted">&mdash;</span></td></tr>
+<td><span class="track" style="width:72px"><span class="fill" style="width:0.0px;background:var(--scvi)"></span></span></td><td class="n">0.0000</td><td class="n">0.0000</td>
+<td><span class="track" style="width:72px"><span class="fill" style="width:0.0px;background:var(--scgpt)"></span></span></td><td class="n">0.0000</td><td class="n">0.0000</td>
+<td><span class="n" style="color:var(--ink-3)">&mdash;</span></td></tr>
 </tbody></table></div>
-<p class="muted">Across all 35 reference types: <strong>8</strong> carry &gt;1% weighted mass but zero hard-label mass in the scVI arm, <strong>17</strong> in the scGPT arm &mdash; including EN-IT-L4-V1, EN-IT-DL-1 and EN-IT-UL-1, the exact types the baseline lost.</p>
-</div>
-<h2>2. Q1 &mdash; does the annotation method change niche composition?</h2>
-<div class="callout warn"><strong>Do not compare the raw cosines across representations.</strong> NNLS composition vectors are dense over all 35 types; the baseline's were sparse over each arm's reached labels only (scVI 16&ndash;17, scGPT 10&ndash;13) with partly disjoint support. Cosine between two dense vectors is systematically higher regardless of whether the arms agree better. The <strong>matched&minus;mismatched gap</strong> below cancels that and is the figure to cite.</div>
-<div class="card">
-<h3>Gap = median cos(scVI[d], scGPT[d]) &minus; mean cos(scVI[d], scGPT[d&prime;]), d&ne;d&prime;</h3>
-<div class="legend"><span class="key"><span class="dot" style="background:var(--c-baseline)"></span>baseline (hard labels, 1 run)</span><span class="key"><span class="dot" style="background:var(--c-nnls)"></span>NNLS (weighted, 25 seed pairs)</span></div>
-<div class="scroll"><table><thead><tr><th>region &times; method</th><th colspan="2">baseline gap</th><th colspan="2">NNLS gap (median)</th><th class="num">NNLS gap range</th><th>verdict</th></tr></thead><tbody>
-<tr><td>v1 &times; banksy</td><td><span class="bar-track" style="width:100px"><span class="bar-fill" style="width:75.5px;background:var(--c-baseline)"></span></span></td><td class="num">0.399</td><td><span class="bar-track" style="width:100px"><span class="bar-fill" style="width:90.9px;background:var(--c-nnls)"></span></span></td><td class="num">0.481</td><td class="num">0.447&ndash;0.511</td><td class="muted">NNLS higher</td></tr>
-<tr><td>v1 &times; stagate</td><td><span class="bar-track" style="width:100px"><span class="bar-fill" style="width:60.2px;background:var(--c-baseline)"></span></span></td><td class="num">0.318</td><td><span class="bar-track" style="width:100px"><span class="bar-fill" style="width:65.5px;background:var(--c-nnls)"></span></span></td><td class="num">0.347</td><td class="num">0.303&ndash;0.398</td><td class="muted">NNLS higher</td></tr>
-<tr><td>v2 &times; banksy</td><td><span class="bar-track" style="width:100px"><span class="bar-fill" style="width:75.2px;background:var(--c-baseline)"></span></span></td><td class="num">0.398</td><td><span class="bar-track" style="width:100px"><span class="bar-fill" style="width:69.8px;background:var(--c-nnls)"></span></span></td><td class="num">0.369</td><td class="num">0.348&ndash;0.392</td><td class="muted">NNLS lower</td></tr>
-<tr><td>v2 &times; stagate</td><td><span class="bar-track" style="width:100px"><span class="bar-fill" style="width:85.0px;background:var(--c-baseline)"></span></span></td><td class="num">0.450</td><td><span class="bar-track" style="width:100px"><span class="bar-fill" style="width:75.3px;background:var(--c-nnls)"></span></span></td><td class="num">0.399</td><td class="num">0.354&ndash;0.440</td><td class="muted">NNLS lower</td></tr>
+<p class="note">Across all 35 reference types, <strong>17</strong> carry more than 1% weighted mass but zero hard-label mass in the scGPT arm (<strong>8</strong> in scVI) &mdash; including EN-IT-L4-V1, EN-IT-DL-1 and EN-IT-UL-1, exactly the types the baseline lost.</p>
+</section>
+<section><div class="sec-head"><span class="eyebrow">Q1 &middot; annotation axis</span><h2>Does the annotation method change niche composition?</h2></div>
+<div class="flag"><p><strong>Raw cosines do not compare across the two transfers.</strong> NNLS composition vectors are dense over all 35 types; the baseline's were sparse over each arm's reached labels only (scVI 16&ndash;17, scGPT 10&ndash;13) with partly disjoint support. Cosine between dense vectors runs higher regardless of whether the arms agree. The matched&minus;mismatched <em>gap</em> cancels that and is the figure to cite.</p></div>
+<p class="note">gap = median cos(scVI[d], scGPT[d]) &minus; mean cos(scVI[d], scGPT[d&prime;]) over d &ne; d&prime;</p>
+<div class="legend"><span class="key"><span class="dot" style="background:var(--baseline)"></span>baseline &middot; hard labels &middot; 1 run</span><span class="key"><span class="dot" style="background:var(--nnls)"></span>NNLS &middot; weighted &middot; 25 seed pairs</span></div>
+<div class="scroll"><table><thead><tr><th>region &times; method</th><th colspan="2">baseline gap</th><th colspan="2">NNLS gap</th><th>NNLS range</th></tr></thead><tbody>
+<tr><td>v1 &times; banksy</td><td><span class="track" style="width:86px"><span class="fill" style="width:63.8px;background:var(--baseline)"></span></span></td><td class="n">0.399</td><td><span class="track" style="width:86px"><span class="fill" style="width:76.8px;background:var(--nnls)"></span></span></td><td class="n">0.481</td><td class="n" style="color:var(--ink-3)">0.447&ndash;0.511</td></tr>
+<tr><td>v1 &times; stagate</td><td><span class="track" style="width:86px"><span class="fill" style="width:50.8px;background:var(--baseline)"></span></span></td><td class="n">0.318</td><td><span class="track" style="width:86px"><span class="fill" style="width:55.4px;background:var(--nnls)"></span></span></td><td class="n">0.347</td><td class="n" style="color:var(--ink-3)">0.303&ndash;0.398</td></tr>
+<tr><td>v2 &times; banksy</td><td><span class="track" style="width:86px"><span class="fill" style="width:63.5px;background:var(--baseline)"></span></span></td><td class="n">0.398</td><td><span class="track" style="width:86px"><span class="fill" style="width:58.9px;background:var(--nnls)"></span></span></td><td class="n">0.369</td><td class="n" style="color:var(--ink-3)">0.348&ndash;0.392</td></tr>
+<tr><td>v2 &times; stagate</td><td><span class="track" style="width:86px"><span class="fill" style="width:71.8px;background:var(--baseline)"></span></span></td><td class="n">0.450</td><td><span class="track" style="width:86px"><span class="fill" style="width:63.6px;background:var(--nnls)"></span></span></td><td class="n">0.399</td><td class="n" style="color:var(--ink-3)">0.354&ndash;0.440</td></tr>
 </tbody></table></div>
-<p class="muted">The effect itself is essentially unchanged &mdash; NNLS is higher in V1, lower in V2, with no consistent direction. What changes is whether it can be <em>measured</em>.</p>
-</div>
-<div class="card">
-<h3>The real gain: the Q1 statistic becomes reproducible</h3>
-<p class="sub">Seed-to-seed spread of the composition agreement, baseline vs NNLS. The baseline figure varies only the scGPT seed (10 seeds, one arm); NNLS varies <em>both</em> arms (25 seed pairs) and is still 3&ndash;5&times; tighter.</p>
-<div class="scroll"><table><thead><tr><th>region &times; method</th><th colspan="2">baseline spread (1 arm reseeded)</th><th colspan="2">NNLS spread (both arms)</th><th class="num">tighter by</th></tr></thead><tbody>
-<tr><td>v1 &times; banksy</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:56.2px;background:var(--c-baseline)"></span></span></td><td class="num">0.203</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:16.6px;background:var(--c-nnls)"></span></span></td><td class="num">0.060</td><td class="num good">3.4&times;</td></tr>
-<tr><td>v1 &times; stagate</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:100.0px;background:var(--c-baseline)"></span></span></td><td class="num">0.361</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:29.9px;background:var(--c-nnls)"></span></span></td><td class="num">0.108</td><td class="num good">3.3&times;</td></tr>
-<tr><td>v2 &times; banksy</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:81.7px;background:var(--c-baseline)"></span></span></td><td class="num">0.295</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:11.9px;background:var(--c-nnls)"></span></span></td><td class="num">0.043</td><td class="num good">6.9&times;</td></tr>
-<tr><td>v2 &times; stagate</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:68.0px;background:var(--c-baseline)"></span></span></td><td class="num">0.246</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:23.2px;background:var(--c-nnls)"></span></span></td><td class="num">0.084</td><td class="num good">2.9&times;</td></tr>
+<p class="note">NNLS is higher in V1, lower in V2 &mdash; no consistent direction. The effect is not what the rewrite changed.</p>
+</section>
+<section><div class="sec-head"><span class="eyebrow">Reproducibility</span><h2>The spread that made Q1 unstatable</h2></div>
+<p>Seed-to-seed spread of composition agreement. The baseline figure varies only the scGPT seed &mdash; 10 seeds, one arm. NNLS varies <em>both</em> arms across 25 seed pairs and is still several times tighter.</p>
+<div class="scroll"><table><thead><tr><th>region &times; method</th><th colspan="2">baseline &middot; 1 arm reseeded</th><th colspan="2">NNLS &middot; both arms</th><th>tighter by</th></tr></thead><tbody>
+<tr><td>v1 &times; banksy</td><td><span class="track" style="width:92px"><span class="fill" style="width:46.1px;background:var(--baseline)"></span></span></td><td class="n">0.203</td><td><span class="track" style="width:92px"><span class="fill" style="width:13.7px;background:var(--nnls)"></span></span></td><td class="n">0.060</td><td class="n good">3.4&times;</td></tr>
+<tr><td>v1 &times; stagate</td><td><span class="track" style="width:92px"><span class="fill" style="width:82.1px;background:var(--baseline)"></span></span></td><td class="n">0.361</td><td><span class="track" style="width:92px"><span class="fill" style="width:24.6px;background:var(--nnls)"></span></span></td><td class="n">0.108</td><td class="n good">3.3&times;</td></tr>
+<tr><td>v2 &times; banksy</td><td><span class="track" style="width:92px"><span class="fill" style="width:67.1px;background:var(--baseline)"></span></span></td><td class="n">0.295</td><td><span class="track" style="width:92px"><span class="fill" style="width:9.8px;background:var(--nnls)"></span></span></td><td class="n">0.043</td><td class="n good">6.9&times;</td></tr>
+<tr><td>v2 &times; stagate</td><td><span class="track" style="width:92px"><span class="fill" style="width:55.8px;background:var(--baseline)"></span></span></td><td class="n">0.246</td><td><span class="track" style="width:92px"><span class="fill" style="width:19.1px;background:var(--nnls)"></span></span></td><td class="n">0.084</td><td class="n good">2.9&times;</td></tr>
 </tbody></table></div>
-<p class="muted">Under the baseline, seed noise (0.203&ndash;0.361) was as large as the effect being claimed, so Q1 could not be stated as a number. Under NNLS the noise (0.043&ndash;0.108) is well below the gap (0.35&ndash;0.48), so it can.</p>
-</div>
-<h2>3. Label recovery &mdash; baseline vs NNLS, across seeds</h2>
-<div class="card">
-<p class="sub">Fraction of seeds in which the transfer reaches each contested EN-IT subtype. Baseline: 10 Leiden seeds. NNLS: 5 seeds.</p>
-<div class="scroll"><table><thead><tr><th>subtype</th><th class="num">baseline scVI</th><th class="num">baseline scGPT</th><th class="num">NNLS scVI</th><th class="num">NNLS scGPT</th><th class="num">NNLS scGPT weight</th></tr></thead><tbody>
-<tr><td>EN-IT-DL-1</td><td class="num good">1.0</td><td class="num bad">0.0</td><td class="num good">1.0</td><td class="num good">1.0</td><td class="num muted">0.126</td></tr>
-<tr><td>EN-IT-DL-2</td><td class="num ">0.5</td><td class="num ">0.6</td><td class="num good">1.0</td><td class="num good">1.0</td><td class="num muted">0.269</td></tr>
-<tr><td>EN-IT-DL-3</td><td class="num good">1.0</td><td class="num good">1.0</td><td class="num good">1.0</td><td class="num good">1.0</td><td class="num muted">0.485</td></tr>
-<tr><td>EN-IT-L4-V1</td><td class="num good">1.0</td><td class="num bad">0.0</td><td class="num good">1.0</td><td class="num good">1.0</td><td class="num muted">0.169</td></tr>
-<tr><td>EN-IT-UL-1</td><td class="num good">1.0</td><td class="num good">1.0</td><td class="num good">1.0</td><td class="num good">1.0</td><td class="num muted">0.186</td></tr>
-<tr><td>EN-IT-UL-2</td><td class="num ">0.1</td><td class="num bad">0.0</td><td class="num good">1.0</td><td class="num bad">0.0</td><td class="num muted">0.000</td></tr>
-<tr><td>EN-IT-UL-3</td><td class="num bad">0.0</td><td class="num bad">0.0</td><td class="num good">1.0</td><td class="num ">0.4</td><td class="num muted">0.065</td></tr>
-<tr><td>EN-IT-UL-4</td><td class="num bad">0.0</td><td class="num bad">0.0</td><td class="num good">1.0</td><td class="num ">0.2</td><td class="num muted">0.016</td></tr>
-<tr><td>EN-IT-UL-5</td><td class="num bad">0.0</td><td class="num bad">0.0</td><td class="num bad">0.0</td><td class="num bad">0.0</td><td class="num muted">0.000</td></tr>
+<p class="note">Under the baseline, seed noise (0.203&ndash;0.361) was as large as the effect being claimed, so Q1 could not be stated as a number. Under NNLS the noise (0.043&ndash;0.108) sits well below the gap (0.35&ndash;0.48).</p>
+</section>
+<section><div class="sec-head"><span class="eyebrow">Label recovery</span><h2>Which subtypes each transfer actually reaches</h2></div>
+<p>Fraction of seeds in which the transfer reaches each contested EN-IT subtype. Baseline: 10 Leiden seeds. NNLS: 5 seeds.</p>
+<div class="scroll"><table><thead><tr><th>subtype</th><th>baseline scVI</th><th>baseline scGPT</th><th>NNLS scVI</th><th>NNLS scGPT</th><th>NNLS scGPT weight</th></tr></thead><tbody>
+<tr><td>EN-IT-DL-1</td>
+<td class="n good">1.0</td>
+<td class="n bad">0.0</td>
+<td class="n good">1.0</td>
+<td class="n good">1.0</td>
+<td class="n" style="color:var(--ink-3)">0.126</td></tr>
+<tr><td>EN-IT-DL-2</td>
+<td class="n ">0.5</td>
+<td class="n ">0.6</td>
+<td class="n good">1.0</td>
+<td class="n good">1.0</td>
+<td class="n" style="color:var(--ink-3)">0.269</td></tr>
+<tr><td>EN-IT-DL-3</td>
+<td class="n good">1.0</td>
+<td class="n good">1.0</td>
+<td class="n good">1.0</td>
+<td class="n good">1.0</td>
+<td class="n" style="color:var(--ink-3)">0.485</td></tr>
+<tr><td>EN-IT-L4-V1</td>
+<td class="n good">1.0</td>
+<td class="n bad">0.0</td>
+<td class="n good">1.0</td>
+<td class="n good">1.0</td>
+<td class="n" style="color:var(--ink-3)">0.169</td></tr>
+<tr><td>EN-IT-UL-1</td>
+<td class="n good">1.0</td>
+<td class="n good">1.0</td>
+<td class="n good">1.0</td>
+<td class="n good">1.0</td>
+<td class="n" style="color:var(--ink-3)">0.186</td></tr>
+<tr><td>EN-IT-UL-2</td>
+<td class="n ">0.1</td>
+<td class="n bad">0.0</td>
+<td class="n good">1.0</td>
+<td class="n bad">0.0</td>
+<td class="n" style="color:var(--ink-3)">0.000</td></tr>
+<tr><td>EN-IT-UL-3</td>
+<td class="n bad">0.0</td>
+<td class="n bad">0.0</td>
+<td class="n good">1.0</td>
+<td class="n ">0.4</td>
+<td class="n" style="color:var(--ink-3)">0.065</td></tr>
+<tr><td>EN-IT-UL-4</td>
+<td class="n bad">0.0</td>
+<td class="n bad">0.0</td>
+<td class="n good">1.0</td>
+<td class="n ">0.2</td>
+<td class="n" style="color:var(--ink-3)">0.016</td></tr>
+<tr><td>EN-IT-UL-5</td>
+<td class="n bad">0.0</td>
+<td class="n bad">0.0</td>
+<td class="n bad">0.0</td>
+<td class="n bad">0.0</td>
+<td class="n" style="color:var(--ink-3)">0.000</td></tr>
 </tbody></table></div>
-<p class="muted">NNLS reaches every contested subtype in both arms at every seed, and recovers EN-IT-UL-2/-3/-4 in the scVI arm &mdash; labels no arm reached under the baseline at any Leiden resolution. EN-IT-UL-5 remains unreached everywhere. Read the weight column alongside: in the scGPT arm these types are recovered as <em>minor</em> components (0.13&ndash;0.19), never a cluster's dominant type.</p>
-</div>
-<h2>4. Cross-region V1-vs-V2 niche matching</h2>
-<div class="card">
-<p class="sub">Mutual-best-matched niches out of 8, mean over 5 seeds.</p>
-<div class="legend"><span class="key"><span class="dot" style="background:var(--c-scvi)"></span>scVI</span><span class="key"><span class="dot" style="background:var(--c-scgpt)"></span>scGPT</span></div>
-<div class="scroll"><table><thead><tr><th>method</th><th>arm</th><th colspan="2">mutual-best of 8</th><th class="num">range</th></tr></thead><tbody>
-<tr><td>banksy</td><td>scgpt</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:96.2px;background:var(--c-scgpt)"></span></span></td><td class="num">7.0</td><td class="num">7&ndash;7</td></tr>
-<tr><td>banksy</td><td>scvi</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:74.2px;background:var(--c-scvi)"></span></span></td><td class="num">5.4</td><td class="num">5&ndash;6</td></tr>
-<tr><td>stagate</td><td>scgpt</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:90.8px;background:var(--c-scgpt)"></span></span></td><td class="num">6.6</td><td class="num">6&ndash;7</td></tr>
-<tr><td>stagate</td><td>scvi</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:85.2px;background:var(--c-scvi)"></span></span></td><td class="num">6.2</td><td class="num">6&ndash;7</td></tr>
+<p class="note">NNLS reaches every contested subtype in both arms at every seed, and recovers EN-IT-UL-2, -3 and -4 in the scVI arm &mdash; labels no arm reached under the baseline at any Leiden resolution. EN-IT-UL-5 stays unreached everywhere. Read the weight column alongside: in the scGPT arm these types come back as <em>minor</em> components (0.13&ndash;0.19), never a cluster's dominant type, so this is not evidence that scGPT resolves them as well as scVI does.</p>
+</section>
+<section><div class="sec-head"><span class="eyebrow">Cross-region</span><h2>V1-vs-V2 niche matching</h2></div>
+<p>Mutual-best-matched niches out of 8, averaged over 5 seeds.</p>
+<div class="scroll"><table><thead><tr><th>method</th><th>arm</th><th colspan="2">mutual-best of 8</th><th>range</th></tr></thead><tbody>
+<tr><td>banksy</td><td>scgpt</td><td><span class="track" style="width:92px"><span class="fill" style="width:80.5px;background:var(--scgpt)"></span></span></td><td class="n">7.0</td><td class="n" style="color:var(--ink-3)">7&ndash;7</td></tr>
+<tr><td>banksy</td><td>scvi</td><td><span class="track" style="width:92px"><span class="fill" style="width:62.1px;background:var(--scvi)"></span></span></td><td class="n">5.4</td><td class="n" style="color:var(--ink-3)">5&ndash;6</td></tr>
+<tr><td>stagate</td><td>scgpt</td><td><span class="track" style="width:92px"><span class="fill" style="width:75.9px;background:var(--scgpt)"></span></span></td><td class="n">6.6</td><td class="n" style="color:var(--ink-3)">6&ndash;7</td></tr>
+<tr><td>stagate</td><td>scvi</td><td><span class="track" style="width:92px"><span class="fill" style="width:71.3px;background:var(--scvi)"></span></span></td><td class="n">6.2</td><td class="n" style="color:var(--ink-3)">6&ndash;7</td></tr>
 </tbody></table></div>
-<p class="muted">The previous dashboard's 0.6 cosine threshold is <strong>not discriminating here</strong>: under dense NNLS composition every mutual-best pair scores &gt;0.9, so the threshold passes everything. Only the match <em>count</em> is informative at this representation.</p>
-</div>
-<h2>5. Cross-method domain agreement &mdash; unchanged</h2>
-<div class="card">
-<p class="sub">Banksy vs STAGATE agreement is computed on domain cell-membership and is <strong>annotation-independent</strong>, so the transfer rewrite does not affect it. Carried forward unchanged.</p>
-<div class="scroll"><table><thead><tr><th>region</th><th>k</th><th colspan="2">ARI (Banksy vs STAGATE)</th><th class="num">p</th></tr></thead><tbody>
-<tr><td>v1</td><td class="num">6</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:71.2px;background:var(--c-baseline)"></span></span></td><td class="num">0.647</td><td class="num">0.001</td></tr>
-<tr><td>v1</td><td class="num">8</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:54.5px;background:var(--c-baseline)"></span></span></td><td class="num">0.495</td><td class="num">0.001</td></tr>
-<tr><td>v1</td><td class="num">10</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:51.4px;background:var(--c-baseline)"></span></span></td><td class="num">0.467</td><td class="num">0.001</td></tr>
-<tr><td>v1</td><td class="num">12</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:47.8px;background:var(--c-baseline)"></span></span></td><td class="num">0.434</td><td class="num">0.001</td></tr>
-<tr><td>v1</td><td class="num">14</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:48.8px;background:var(--c-baseline)"></span></span></td><td class="num">0.444</td><td class="num">0.001</td></tr>
-<tr><td>v2</td><td class="num">6</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:60.4px;background:var(--c-baseline)"></span></span></td><td class="num">0.549</td><td class="num">0.001</td></tr>
-<tr><td>v2</td><td class="num">8</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:63.2px;background:var(--c-baseline)"></span></span></td><td class="num">0.574</td><td class="num">0.001</td></tr>
-<tr><td>v2</td><td class="num">10</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:56.9px;background:var(--c-baseline)"></span></span></td><td class="num">0.517</td><td class="num">0.001</td></tr>
-<tr><td>v2</td><td class="num">12</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:56.6px;background:var(--c-baseline)"></span></span></td><td class="num">0.514</td><td class="num">0.001</td></tr>
-<tr><td>v2</td><td class="num">14</td><td><span class="bar-track" style="width:110px"><span class="bar-fill" style="width:48.9px;background:var(--c-baseline)"></span></span></td><td class="num">0.445</td><td class="num">0.001</td></tr>
+<p class="note">The old 0.6 cosine match threshold is <strong>not discriminating here</strong>: under dense composition every mutual-best pair scores above 0.9, so the threshold passes everything. Only the match count carries information at this representation.</p>
+</section>
+<section><div class="sec-head"><span class="eyebrow">Unchanged</span><h2>Cross-method domain agreement</h2></div>
+<p>Banksy vs STAGATE agreement is computed on domain cell-membership and is annotation-independent, so the transfer rewrite cannot affect it. Carried forward as is.</p>
+<div class="scroll"><table><thead><tr><th>region</th><th>k</th><th colspan="2">ARI, Banksy vs STAGATE</th><th>p</th></tr></thead><tbody>
+<tr><td>v1</td><td class="n">6</td><td><span class="track" style="width:92px"><span class="fill" style="width:59.5px;background:var(--baseline)"></span></span></td><td class="n">0.647</td><td class="n" style="color:var(--ink-3)">0.001</td></tr>
+<tr><td>v1</td><td class="n">8</td><td><span class="track" style="width:92px"><span class="fill" style="width:45.5px;background:var(--baseline)"></span></span></td><td class="n">0.495</td><td class="n" style="color:var(--ink-3)">0.001</td></tr>
+<tr><td>v1</td><td class="n">10</td><td><span class="track" style="width:92px"><span class="fill" style="width:43.0px;background:var(--baseline)"></span></span></td><td class="n">0.467</td><td class="n" style="color:var(--ink-3)">0.001</td></tr>
+<tr><td>v1</td><td class="n">12</td><td><span class="track" style="width:92px"><span class="fill" style="width:40.0px;background:var(--baseline)"></span></span></td><td class="n">0.434</td><td class="n" style="color:var(--ink-3)">0.001</td></tr>
+<tr><td>v1</td><td class="n">14</td><td><span class="track" style="width:92px"><span class="fill" style="width:40.8px;background:var(--baseline)"></span></span></td><td class="n">0.444</td><td class="n" style="color:var(--ink-3)">0.001</td></tr>
+<tr><td>v2</td><td class="n">6</td><td><span class="track" style="width:92px"><span class="fill" style="width:50.6px;background:var(--baseline)"></span></span></td><td class="n">0.549</td><td class="n" style="color:var(--ink-3)">0.001</td></tr>
+<tr><td>v2</td><td class="n">8</td><td><span class="track" style="width:92px"><span class="fill" style="width:52.8px;background:var(--baseline)"></span></span></td><td class="n">0.574</td><td class="n" style="color:var(--ink-3)">0.001</td></tr>
+<tr><td>v2</td><td class="n">10</td><td><span class="track" style="width:92px"><span class="fill" style="width:47.6px;background:var(--baseline)"></span></span></td><td class="n">0.517</td><td class="n" style="color:var(--ink-3)">0.001</td></tr>
+<tr><td>v2</td><td class="n">12</td><td><span class="track" style="width:92px"><span class="fill" style="width:47.3px;background:var(--baseline)"></span></span></td><td class="n">0.514</td><td class="n" style="color:var(--ink-3)">0.001</td></tr>
+<tr><td>v2</td><td class="n">14</td><td><span class="track" style="width:92px"><span class="fill" style="width:40.9px;background:var(--baseline)"></span></span></td><td class="n">0.445</td><td class="n" style="color:var(--ink-3)">0.001</td></tr>
 </tbody></table></div>
-</div>
-<p class="muted" style="margin-top:28px">Generated by <code>scripts/viz/build_nnls_dashboard.py</code> from the CSVs in <code>results_local/</code>. Regenerate after any transfer or seed change.</p>
+</section>
+<footer>Generated by scripts/viz/build_nnls_dashboard.py from the CSVs in results_local/. Rerun after any transfer or seed change.</footer>
 </div>
 </body>
 </html>
